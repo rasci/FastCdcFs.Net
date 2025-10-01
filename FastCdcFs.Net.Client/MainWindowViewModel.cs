@@ -94,7 +94,7 @@ internal class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private IEnumerable<Entry> Map(string path, IEnumerable<Reader.DirectoryEntry> entries)
+    private IEnumerable<Entry> Map(string path, IEnumerable<Reader.Entry> entries)
     {
         CurrentPath = path;
 
@@ -102,14 +102,14 @@ internal class MainWindowViewModel : ViewModelBase
 
         if (path is not "")
         {
-            list.Add(new DirectoryEntry("..", Helper.GetDirectoryName(path)));
+            list.Add(new DirectoryEntry("..", FastCdcFsHelper.GetDirectoryName(path)!));
         }
 
         foreach (var entry in entries)
         {
             if (entry.IsDirectory)
             {
-                list.Add(new DirectoryEntry(entry.Name, Helper.PathCombine(path, entry.Name)));
+                list.Add(new DirectoryEntry(entry.Name, FastCdcFsHelper.PathCombine(path, entry.Name)));
             }
             else
             {

@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.IO.IsolatedStorage;
 using System.Text;
 using ZstdSharp;
 
@@ -12,9 +14,39 @@ public struct Range(uint offset, uint length)
         => $"Offset {Offset} Length {Length}";
 }
 
-public record DirectoryEntry(string Name, uint Length, bool IsFile)
+public class Entry
 {
+    private readonly FastCdcFsReader reader;
+
+    internal Entry(FastCdcFsReader reader, string fullName, string name, uint length, bool isFile)
+    {
+        this.reader = reader;
+
+        FullName = fullName;
+        Name = name;
+        Length = length;
+        IsFile = isFile;
+    }
+
+    public string FullName { get; init; }
+
+    public string Name { get; init; }
+
+    public uint Length { get; init; }
+
+    public bool IsFile { get; init; }
+
     public bool IsDirectory => !IsFile;
+
+    public Stream Open()
+        => IsFile
+            ? throw new InvalidOperationException("Cannot open a directory")
+            : reader.OpenFile(FullName);
+
+    public byte[] ReadAllBytes()
+        => IsFile
+            ? throw new InvalidOperationException("Cannot open a directory")
+            : reader.ReadFile(FullName);
 }
 
 public abstract class FastCdcFsException(string message) : Exception(message);
@@ -60,12 +92,22 @@ public class FastCdcFsReader : IDisposable
         dataOffset = (uint)s.Position;
     }
 
-    public IReadOnlyCollection<DirectoryEntry> List(string? directory = null)
+    public Entry Get(string? path)
     {
-        directory = directory ?? "";
+        path = FastCdcFsHelper.Normalize(path);
 
-        if (directory.StartsWith('/'))
-            throw new Exception("this is not linux");
+        if (files.TryGetValue(path, out var e))
+            return new(this, path, Path.GetFileName(path), e.Length, true);
+
+        var entry = directories.FirstOrDefault(e => e.FullName == path);
+        return entry is null
+            ? throw new FileNotFoundException(path)
+            : new(this, entry.FullName, entry.Name, 0, false);
+    }
+
+    public IReadOnlyCollection<Entry> List(string? directory = null)
+    {
+        directory = FastCdcFsHelper.Normalize(directory);
 
         var entry = this.directories.FirstOrDefault(e => e.FullName == directory);
         if (entry is null)
@@ -74,22 +116,22 @@ public class FastCdcFsReader : IDisposable
         var directories = this.directories
             .Where(d => d.ParentId == entry.Id && d.Id > 0)
             .OrderBy(d => d.Name)
-            .Select(d => new DirectoryEntry(d.Name, 0, false));
+            .Select(d => new Entry(this, d.FullName, d.Name, 0, false));
 
         var files = this.files
-            .Where(f => Helper.GetDirectoryName(f.Key) == entry.FullName)
-            .Select(f => new DirectoryEntry(Path.GetFileName(f.Key), f.Value.Length, true))
+            .Where(f => FastCdcFsHelper.GetDirectoryName(f.Key) == entry.FullName)
+            .Select(f => new Entry(this, f.Key, Path.GetFileName(f.Key), f.Value.Length, true))
             .OrderBy(e => e.Name);
 
         return directories.Concat(files).ToArray();
     }
 
-    public Stream OpenFile(string path)
+    internal Stream OpenFile(string path)
         => files.TryGetValue(path, out var e)
             ? new FastCdcFsStream(s, dataOffset, compressionDict, chunks, e.ChunkIds, e.Length, compressed)
             : throw new FileNotFoundException(path);
 
-    public byte[] ReadFile(string path)
+    internal byte[] ReadFile(string path)
     {
         if (!files.TryGetValue(path, out var e))
             throw new FileNotFoundException(path);
@@ -211,7 +253,7 @@ public class FastCdcFsReader : IDisposable
             chunkIds[i] = br.ReadUInt32();
         }
 
-        files.Add(Helper.PathCombine(directories[directoryId].FullName, name), (length, chunkIds));
+        files.Add(FastCdcFsHelper.PathCombine(directories[directoryId].FullName, name), (length, chunkIds));
     }
 
     [MemberNotNull(nameof(directories))]
@@ -225,7 +267,7 @@ public class FastCdcFsReader : IDisposable
         {
             var parentId = br.ReadUInt32();
             var name = br.ReadString();
-            directories[i + 1] = new(i + 1, parentId, name, Helper.PathCombine(directories[parentId].FullName, name));
+            directories[i + 1] = new(i + 1, parentId, name, FastCdcFsHelper.PathCombine(directories[parentId].FullName, name));
         }
     }
 }

@@ -200,7 +200,7 @@ public class FastCdcFsWriter(Options options)
 
     private FileInfo CreateFile(string name, uint length)
     {
-        var directory = GetOrCreateDirectory(Helper.GetDirectoryName(name));
+        var directory = GetOrCreateDirectory(FastCdcFsHelper.GetDirectoryName(name)!);
         var file = new FileInfo(nextFileId++, directory.Id, Path.GetFileName(name), length);
         files.Add(file);
         return file;
@@ -214,7 +214,7 @@ public class FastCdcFsWriter(Options options)
         if (directories.TryGetValue(path, out var info))
             return info;
 
-        var parent = GetOrCreateDirectory(Helper.GetDirectoryName(path));
+        var parent = GetOrCreateDirectory(FastCdcFsHelper.GetDirectoryName(path)!);
         info = new DirectoryInfo(nextDirectoryId++, parent.Id, Path.GetFileName(path));
         directories.Add(path, info);
         return info;

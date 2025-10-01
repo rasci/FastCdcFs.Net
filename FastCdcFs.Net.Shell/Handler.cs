@@ -93,7 +93,8 @@ internal class Handler
 
         if (a.IsFile)
         {
-            File.WriteAllBytes(a.TargetPath ?? Path.GetFileName(a.File), reader.ReadFile(a.File));
+#warning do Stream.CopyToAsync
+            File.WriteAllBytes(a.TargetPath ?? Path.GetFileName(a.File), reader.Get(a.File).ReadAllBytes());
         }   
 
         if (a.IsDirectory || !a.IsFile)
@@ -117,7 +118,8 @@ internal class Handler
             if (entry.IsFile)
             {
                 Console.WriteLine($"Extracting file {sourcePath} to {targetPath}");
-                File.WriteAllBytes(targetPath, reader.ReadFile(sourcePath));
+#warning do Stream.CopyToAsync
+                File.WriteAllBytes(targetPath, entry.ReadAllBytes());
             }
             else if (recursive)
             {

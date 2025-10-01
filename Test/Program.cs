@@ -19,7 +19,7 @@ foreach (var entry in reader.List())
     Console.WriteLine($"read {entry.Name}");
 
     using var ms = new MemoryStream();
-    using var stream = reader.OpenFile(entry.Name);
+    using var stream = entry.Open();
     stream.CopyTo(ms);
     var data = ms.ToArray();
 
