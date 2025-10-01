@@ -14,8 +14,7 @@ public abstract class TestBase
              "dirA/fileC",
              "dirA/fileD",
              "dirB/fileE",
-             "dirB/fileF",
-             "dirA/fileA");
+             "dirB/fileF");
 
     protected static FastCdcFsReader CreateReaderWith(params string[] files)
     {
@@ -34,7 +33,7 @@ public abstract class TestBase
     {
         foreach (var file in paths)
         {
-            writer.AddFile(GenerateRepresentativeJsonData(1024 * 10), file);
+            writer.AddFile(GenerateRepresentativeJsonData(1024 * 1000), file);
         }
     }
 
