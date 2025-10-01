@@ -40,13 +40,13 @@ public class Entry
 
     public Stream Open()
         => IsFile
-            ? throw new InvalidOperationException("Cannot open a directory")
-            : reader.OpenFile(FullName);
+            ? reader.OpenFile(FullName)
+            : throw new InvalidOperationException("Cannot open a directory");
 
     public byte[] ReadAllBytes()
         => IsFile
-            ? throw new InvalidOperationException("Cannot open a directory")
-            : reader.ReadFile(FullName);
+            ? reader.ReadFile(FullName)
+            : throw new InvalidOperationException("Cannot open a directory");
 }
 
 public abstract class FastCdcFsException(string message) : Exception(message);

@@ -7,6 +7,8 @@ public abstract class TestBase
 {
     private static readonly Random Rand = new((int)DateTime.UtcNow.Ticks);
 
+    protected readonly Dictionary<string, byte[]> randFileData = [];
+
     protected static string[] DefaultFiles = [
         "fileA",
         "fileB",
@@ -15,27 +17,28 @@ public abstract class TestBase
         "dirB/fileE",
         "dirB/fileF"];
 
-    protected static FastCdcFsReader CreateDefaultReader()
+    protected FastCdcFsReader CreateDefaultReader()
         => CreateReaderWith(DefaultFiles);
 
-    protected static FastCdcFsReader CreateReaderWith(params string[] files)
+    protected FastCdcFsReader CreateReaderWith(params string[] files)
     {
         var writer = new FastCdcFsWriter(Options.Default);
-
         AddRandFiles(writer, files);
 
-        using var ms = new MemoryStream();
+        var ms = new MemoryStream();
         writer.Build(ms);
 
         ms.Position = 0;
         return new(ms);
     }
 
-    protected static void AddRandFiles(FastCdcFsWriter writer, params string[] paths)
+    protected void AddRandFiles(FastCdcFsWriter writer, params string[] paths)
     {
         foreach (var file in paths)
         {
-            writer.AddFile(GenerateRepresentativeJsonData(1024 * 1000), file);
+            var data = GenerateRepresentativeJsonData(1024 * 1000);
+            randFileData[file] = data;
+            writer.AddFile(data, file);
         }
     }
 
