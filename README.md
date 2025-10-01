@@ -70,3 +70,41 @@ using var reader = new CdcFsReader("myfs.fastcdcfs");
 var entry = reader.Get("some/known/file/path");
 var stream = entry!.Open();
 ```
+
+## File System Format
+
+The id of a directory is the index in the directory table
+The id of a chunk is the index in the chunk boundary table
+
+```
++--------------------------------------------------------------------------------------+
+| [0x00..0x08]   magic: utf8 "FASTCDCFS"            | identifies file
+| [0x09..0x0A]   mode: byte                         | identifies the file modes
+| [0x0B..0x0D]   directory count: u32               | number of directories
+| [0x0E..]       directory table: <repeated>
+| [..]              parent id: u32                  | parent id of directory
+| [..]              name: utf8                      | name of directory
+| [..]           files count: u32                   | number of files
+| [..]           files table: <repeated>
+| [..]              directory id: u32               | id of directory
+| [..]              name: utf8                      | name of file
+| [..]              length: u32                     | length of file
+| [..]              chunk count: u32                | number of chunk ids
+| [..]              file chunk table: <repeated>
+| [..]                  chunk id: u32               | chunk id
+| [..]           compression dict length: u32       | compression dict length, only available when mode is not nozst
+| [..]           compression dict                   | compression dict, only available when mode is not nozst
+| [..]           chunk boundary count: u32          | number of chunk boundaries
+| [..]           chunk boundary table: <repeated>
+| [..]              chunk length: u32               | length of chunk
+| [..]              compressed chunk length: u32    | length of compressed chunk, only available when mode is not nozst
+| [..]           chunks: raw                        | chunks
++--------------------------------------------------------------------------------------+
+```
+
+### File System Modes
+
+```
+None = 0x0
+NoZstd = 0x1
+```
