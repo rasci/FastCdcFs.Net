@@ -92,14 +92,16 @@ The id of a chunk is the index in the chunk boundary table
 | [..]              chunk count: u32                | number of chunk ids
 | [..]              file chunk table: <repeated>
 | [..]                  chunk id: u32               | chunk id
-| [..]           compression dict length: u32       | compression dict length, only available when mode is not nozst
-| [..]           compression dict                   | compression dict, only available when mode is not nozst
+| [..]           compression dict length: u32       | length of compression dict*
+| [..]           compression dict                   | compression dict*
 | [..]           chunk boundary count: u32          | number of chunk boundaries
 | [..]           chunk boundary table: <repeated>
 | [..]              chunk length: u32               | length of chunk
-| [..]              compressed chunk length: u32    | length of compressed chunk, only available when mode is not nozst
+| [..]              compressed chunk length: u32    | length of compressed chunk*
 | [..]           chunks: raw                        | chunks
 +--------------------------------------------------------------------------------------+
+
+* only available when mode is not nozst
 ```
 
 ### File System Modes
