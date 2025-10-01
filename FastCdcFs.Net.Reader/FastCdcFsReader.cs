@@ -14,6 +14,10 @@ public record DirectoryEntry(string Name, uint Length, bool IsFile)
     public bool IsDirectory => !IsFile;
 }
 
+public abstract class FastCdcFsException(string message) : Exception(message);
+
+public class InvalidFastCdcFsFileException(string path) : FastCdcFsException($"Invalid file {path}");
+
 public class FastCdcFsReader : IDisposable
 {
     private record InternalDirectoryEntry(uint Id, uint ParentId, string Name, string FullName);
@@ -40,8 +44,8 @@ public class FastCdcFsReader : IDisposable
         this.leaveOpen = leaveOpen;
         br = new(s, Encoding.UTF8, leaveOpen);
 
-        if (br.ReadString() != "CDCFS")
-            throw new Exception("Not a CDCFS");
+        if (br.ReadString() != "FastCdcFs")
+            throw new InvalidFastCdcFsFileException("Not a FastCdcFs file");
 
         mode = (Modes)br.ReadByte();
 
