@@ -84,6 +84,11 @@ public class FastCdcFsReader : IDisposable
         return directories.Concat(files).ToArray();
     }
 
+    public Stream OpenFile(string path)
+        => files.TryGetValue(path, out var e)
+            ? new FastCdcFsStream(s, dataOffset, compressionDict, chunks, e.ChunkIds, e.Length, compressed)
+            : throw new FileNotFoundException(path);
+
     public byte[] ReadFile(string path)
     {
         if (!files.TryGetValue(path, out var e))

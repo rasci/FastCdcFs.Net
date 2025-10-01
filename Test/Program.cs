@@ -17,7 +17,11 @@ using var reader = new FastCdcFsReader(File.OpenRead(@"d:\work\bcr\firmware-imag
 foreach (var entry in reader.List())
 {
     Console.WriteLine($"read {entry.Name}");
-    var data = reader.ReadFile(entry.Name);
+
+    using var ms = new MemoryStream();
+    using var stream = reader.OpenFile(entry.Name);
+    stream.CopyTo(ms);
+    var data = ms.ToArray();
 
     var sourcePath = Path.Combine(@"D:\work\bcr\current-dlbs", entry.Name);
     var sourceData = File.ReadAllBytes(sourcePath);
