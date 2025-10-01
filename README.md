@@ -73,9 +73,6 @@ var stream = entry!.Open();
 
 ## File System Format
 
-The id of a directory is the index in the directory table
-The id of a chunk is the index in the chunk boundary table
-
 ```
 +--------------------------------------------------------------------------------------+
 | [0x00..0x08]   magic: utf8 "FASTCDCFS"            | identifies file
@@ -103,6 +100,10 @@ The id of a chunk is the index in the chunk boundary table
 
 * only available when mode is not nozst
 ```
+
+- the utf8 string encoding uses a 7-bit encoded length prefix
+- the id of a directory is the index in the directory table
+- the id of a chunk is the index in the chunk boundary table
 
 ### File System Modes
 
