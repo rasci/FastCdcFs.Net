@@ -1,6 +1,6 @@
-# CdcFS
+# FastCdcFS.Net
 
-A Fast Content-Defined Chunking readonly File System
+A .NET library for creating read-only file systems backed by fast content-defined chunking. It allows efficient storage, deduplication, and retrieval of files and directories while keeping access fast and lightweight. Ideal for scenarios where immutable file systems are needed, such as archival storage, distribution, or data integrity–focused applications.
 
 ## Usage
 
