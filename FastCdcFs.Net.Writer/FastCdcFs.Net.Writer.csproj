@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<AssemblyName>FastCdcFs.Net.Writer</AssemblyName>
+	<RootNamespace>FastCdcFs.Net.Writer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+  	<PackageReference Include="FastCdc.Net" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FastCdcFs.Net.Reader\FastCdcFs.Net.Reader.csproj" />
+  </ItemGroup>
+
+</Project>

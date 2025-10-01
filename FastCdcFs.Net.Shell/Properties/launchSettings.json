@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "Build from DLBs directory": {
+      "commandName": "Project",
+      "commandLineArgs": "build -d \"d:\\work\\chunkfs\\dlbs\" -o \"d:\\work\\chunkfs\\shell.zstd.cdcfs\""
+    },
+    "List": {
+      "commandName": "Project",
+      "commandLineArgs": "list -d other \"d:\\work\\chunkfs\\structured-current-test.cdcfs\""
+    },
+    "Extract File": {
+      "commandName": "Project",
+      "commandLineArgs": "extract -f /3167B_W744_004.dlb --target \"d:\\work\\chunkfs\\tmp\\3167B_W744_004.dlb\" \"d:\\work\\chunkfs\\shell.zstd.cdcfs\""
+    },
+    "Extract All": {
+      "commandName": "Project",
+      "commandLineArgs": "extract --target \"d:\\work\\chunkfs\\tmp\" \"d:\\work\\chunkfs\\shell.zstd.cdcfs\""
+    }
+  }
+}

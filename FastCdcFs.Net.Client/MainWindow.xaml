@@ -1,0 +1,113 @@
+﻿<Window x:Class="FastCdcFs.Net.Client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FastCdcFs.Net.Client"
+        mc:Ignorable="d"
+        Title="FastCdcFs.Net Viewer" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Orientation="Horizontal"
+                    Margin="5">
+            <Button Content="Open"
+                    Command="{Binding LoadCommand}"
+                    Padding="5,2"/>
+
+            <Button Content="Open"
+                    Command="{Binding LoadCommand}"
+                    Padding="5,2"/>
+        </StackPanel>
+        
+
+        <TextBox Grid.Row="1"
+                 Grid.ColumnSpan="2"
+                 Text="{Binding CurrentPath, Mode=OneWay}"
+                 IsReadOnly="True"/>
+
+        <ListBox Grid.Row="2"
+                 Grid.ColumnSpan="2"
+                 Grid.IsSharedSizeScope="True"
+                 ItemsSource="{Binding Entries}"
+                 SelectedItem="{Binding SelectedEntries}"
+                 SelectionMode="Multiple"
+                 Margin="0,2,0,0">
+            <ListBox.Resources>
+                <Canvas x:Key="appbar_folder" Width="76" Height="76" Clip="F1 M 0,0L 76,0L 76,76L 0,76L 0,0">
+                    <Path Width="34.9999" Height="26" Canvas.Left="21" Canvas.Top="24" Stretch="Fill" Fill="DarkGray" Data="F1 M 21,30.0001L 55.9999,30.0001L 55.9999,50L 21,50L 21,30.0001 Z M 52,28L 37,28C 38,25 39.4999,24.0001 39.4999,24.0001L 50.75,24C 51.3023,24 52,24.6977 52,25.25L 52,28 Z "/>
+                </Canvas>
+
+                <Canvas x:Key="appbar_page" Width="76" Height="76" Clip="F1 M 0,0L 76,0L 76,76L 0,76L 0,0">
+                    <Path Width="36" Height="42" Canvas.Left="20" Canvas.Top="17" Stretch="Fill" Fill="DarkGray" Data="F1 M 20,17L 44,17L 56,29L 56,59L 20,59L 20,17 Z M 24,21L 24,55L 52,55L 52,34L 39,34L 39,21L 24,21 Z M 43,21L 43,30L 52,30L 43,21 Z "/>
+                </Canvas>
+
+                <DataTemplate DataType="{x:Type local:DirectoryEntry}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" SharedSizeGroup="Icon" />
+                            <ColumnDefinition Width="auto" SharedSizeGroup="Width" />
+                        </Grid.ColumnDefinitions>
+
+                        <Rectangle Height="20"
+                                   Width="20"
+                                   Margin="2">
+                            <Rectangle.Fill>
+                                <VisualBrush Visual="{StaticResource appbar_folder}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Name}"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"
+                                   Margin="2"/>
+                    </Grid>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type local:FileEntry}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" SharedSizeGroup="Icon" />
+                            <ColumnDefinition Width="auto" SharedSizeGroup="Width" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Rectangle Height="22"
+                                   Width="18"
+                                   Margin="2">
+                            <Rectangle.Fill>
+                                <VisualBrush Visual="{StaticResource appbar_page}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Name}"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"
+                                   Margin="2"/>
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding LengthText}"
+                                   VerticalAlignment="Center"
+                                   Margin="2"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.Resources>
+
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <EventSetter Event="MouseDoubleClick" Handler="ListBoxItem_MouseDoubleClick"/>
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+    </Grid>
+</Window>

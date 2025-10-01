@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+	  <LangVersion>preview</LangVersion>
+	  <AssemblyName>FastCdcFs.Net.Client</AssemblyName>
+	  <RootNamespace>FastCdcFs.Net.Client</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Humanizer" Version="3.0.0-beta.96" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FastCdcFs.Net.Reader\FastCdcFs.Net.Reader.csproj" />
+  </ItemGroup>
+
+</Project>

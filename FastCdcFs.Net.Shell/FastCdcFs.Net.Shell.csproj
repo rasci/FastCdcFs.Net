@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<AssemblyName>FastCdcFs.Net.Shell</AssemblyName>
+	<RootNamespace>FastCdcFs.Net.Shell</RootNamespace>
+	<ToolCommandName>fastcdcfs</ToolCommandName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FastCdcFs.Net.Writer\FastCdcFs.Net.Writer.csproj" />
+  </ItemGroup>
+
+</Project>
