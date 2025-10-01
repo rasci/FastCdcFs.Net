@@ -97,7 +97,13 @@ public class FastCdcFsWriter(Options options)
 
         foreach (var chunk in chunks)
         {
-            bw.Write(options.NoZstd ? chunk.Data.Length : chunk.CompressedData!.Length);
+            //bw.Write(options.NoZstd ? chunk.Data.Length : chunk.CompressedData!.Length);
+            bw.Write(chunk.Data.Length);
+
+            if (!options.NoZstd)
+            {
+                bw.Write(chunk.CompressedData!.Length);
+            }
         }
 
         foreach (var chunk in chunks)
@@ -118,9 +124,12 @@ public class FastCdcFsWriter(Options options)
             compressor.LoadDictionary(dict);
 
             using var ms = new MemoryStream();
-            using var cs = new CompressionStream(ms, compressor);
-            cs.Write(c.Data);
-            cs.Flush();
+            using (var cs = new CompressionStream(ms, compressor))
+            {
+                cs.Write(c.Data);
+                cs.Flush();
+            }
+            
             c.CompressedData = ms.ToArray();
         });
 

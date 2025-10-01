@@ -1,47 +1,33 @@
-﻿using FastCdcFs.Net.Writer;
+﻿using FastCdcFs.Net.Reader;
+using FastCdcFs.Net.Writer;
 
 var writer = new FastCdcFsWriter(Options.Default);
 
-foreach (var file in Directory.GetFiles(@"d:\work\fastcdsfs\dlbs"))
+var i = 0;
+foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
 {
     Console.WriteLine($"adding {file}");
-
-    if (file.Contains("res_"))
-    {
-        writer.AddFile(file, $"residents/{Path.GetFileName(file)}");
-    }
-    else if (Path.GetExtension(file) is not ".dlb")
-    {
-        writer.AddFile(file, $"other/{Path.GetFileName(file)}");
-    }
-    else if (file.Contains("_C"))
-    {
-        writer.AddFile(file, $"release/slaves/{Path.GetFileName(file)}");
-    }
-    else if (file.Contains("_V"))
-    {
-        writer.AddFile(file, $"test/slaves/{Path.GetFileName(file)}");
-    }
-    else if (file.Contains("_D"))
-    {
-        writer.AddFile(file, $"release/fusion/{Path.GetFileName(file)}");
-    }
-    else if (file.Contains("_W"))
-    {
-        writer.AddFile(file, $"test/fusion/{Path.GetFileName(file)}");
-    }
-    else if (file.Contains("_B"))
-    {
-        writer.AddFile(file, $"release/nucleus/{Path.GetFileName(file)}");
-    }
-    else if (file.Contains("_U"))
-    {
-        writer.AddFile(file, $"test/nucleus/{Path.GetFileName(file)}");
-    }
-    else
-    {
-        writer.AddFile(file, $"other/{Path.GetFileName(file)}");
-    }
+    writer.AddFile(file, Path.GetFileName(file));
 }
 
-writer.Build(@"d:\work\chunkfs\structured-current-test.cdcfs");
+writer.Build(@"d:\work\bcr\firmware-images-smartbox.fastcdcfs");
+
+using var reader = new FastCdcFsReader(File.OpenRead(@"d:\work\bcr\firmware-images-smartbox.fastcdcfs"));
+
+foreach (var entry in reader.List())
+{
+    Console.WriteLine($"read {entry.Name}");
+    var data = reader.ReadFile(entry.Name);
+
+    var sourcePath = Path.Combine(@"D:\work\bcr\current-dlbs", entry.Name);
+    var sourceData = File.ReadAllBytes(sourcePath);
+
+    for (i = 0; i < sourceData.Length; i++)
+    {
+        if (data[i] != sourceData[i])
+        {
+            Console.WriteLine(string.Join("", data.Skip(i)));
+            throw new Exception("data mismatch");
+        }
+    }       
+}
