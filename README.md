@@ -75,10 +75,10 @@ var stream = entry!.Open();
 
 ```
 +--------------------------------------------------------------------------------------+
-| [0x00..0x08]   magic: utf8 "FASTCDCFS"            | identifies file
-| [0x09..0x0A]   mode: byte                         | identifies the file modes
-| [0x0B..0x0D]   directory count: u32               | number of directories
-| [0x0E..]       directory table: <repeated>
+| [0x00..0x09]   magic: utf8 "FASTCDCFS"            | identifies file
+| [0x0A..0x0B]   mode: byte                         | identifies the file modes
+| [0x0D..0x0E]   directory count: u32               | number of directories
+| [0x0F..]       directory table: <repeated>
 | [..]              parent id: u32                  | parent id of directory
 | [..]              name: utf8                      | name of directory
 | [..]           files count: u32                   | number of files
