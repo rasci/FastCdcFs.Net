@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.IO.IsolatedStorage;
 using System.Text;
 using ZstdSharp;
 
