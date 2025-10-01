@@ -7,14 +7,16 @@ public abstract class TestBase
 {
     private static readonly Random Rand = new((int)DateTime.UtcNow.Ticks);
 
+    protected static string[] DefaultFiles = [
+        "fileA",
+        "fileB",
+        "dirA/fileC",
+        "dirA/fileD",
+        "dirB/fileE",
+        "dirB/fileF"];
+
     protected static FastCdcFsReader CreateDefaultReader()
-        => CreateReaderWith(
-             "fileA",
-             "fileB",
-             "dirA/fileC",
-             "dirA/fileD",
-             "dirB/fileE",
-             "dirB/fileF");
+        => CreateReaderWith(DefaultFiles);
 
     protected static FastCdcFsReader CreateReaderWith(params string[] files)
     {

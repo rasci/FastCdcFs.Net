@@ -1,40 +1,15 @@
 using FastCdcFs.Net.Reader;
-using FastCdcFs.Net.Writer;
 
 namespace Tests;
 
-public class WriterReaderTests : TestBase
+public class FastCdcFsReaderList : TestBase
 {
     
-
     [Fact]
-    public void WriteRead()
+    public void ListAllRecursive()
     {
-        var files = new[]
-        {
-            "file0",
-            "file1",
-            "0/file0",
-            "0/file1",
-            "1/file0",
-            "1/file1",
-            "0/0/file0",
-            "0/0/file1",
-            "0/1/file0",
-            "0/1/file1"
-        };
-
-        var writer = new FastCdcFsWriter(Options.Default);
-
-        AddRandFiles(writer, files);
-
-        using var ms = new MemoryStream();
-        writer.Build(ms);
-
-        ms.Position = 0;
-
-        using var reader = new FastCdcFsReader(ms);
-        AsserFiles(reader, files);
+        using var reader = CreateDefaultReader();
+        AsserFiles(reader, DefaultFiles);
     }
 
     private static void AsserFiles(FastCdcFsReader reader, params string[] paths)
@@ -59,6 +34,4 @@ public class WriterReaderTests : TestBase
 
         Assert.Empty(left);
     }
-
-    
 }
