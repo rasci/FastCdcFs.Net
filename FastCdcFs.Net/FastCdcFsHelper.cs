@@ -1,4 +1,4 @@
-﻿namespace FastCdcFs.Net.Reader;
+﻿namespace FastCdcFs.Net;
 
 public class FastCdcFsHelper
 {

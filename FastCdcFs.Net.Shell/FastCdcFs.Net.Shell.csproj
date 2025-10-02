@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FastCdcFs.Net.Writer\FastCdcFs.Net.Writer.csproj" />
+    <ProjectReference Include="..\FastCdcFs.Net\FastCdcFs.Net.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using ZstdSharp;
 
-namespace FastCdcFs.Net.Reader;
+namespace FastCdcFs.Net;
 
 public class FastCdcFsStream : Stream
 {

@@ -1,5 +1,4 @@
-﻿using FastCdcFs.Net.Reader;
-using Humanizer;
+﻿using Humanizer;
 using Microsoft.Win32;
 using System.Windows.Input;
 
@@ -94,7 +93,7 @@ internal class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private IEnumerable<Entry> Map(string path, IEnumerable<Reader.Entry> entries)
+    private IEnumerable<Entry> Map(string path, IEnumerable<Net.Entry> entries)
     {
         CurrentPath = path;
 

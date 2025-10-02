@@ -1,4 +1,4 @@
-using FastCdcFs.Net.Reader;
+using FastCdcFs.Net;
 
 namespace Tests;
 

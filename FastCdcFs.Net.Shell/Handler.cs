@@ -1,7 +1,4 @@
-﻿using FastCdcFs.Net.Reader;
-using FastCdcFs.Net.Writer;
-
-namespace FastCdcFs.Net.Shell;
+﻿namespace FastCdcFs.Net.Shell;
 
 internal class Handler
 {

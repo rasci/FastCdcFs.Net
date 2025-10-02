@@ -1,10 +1,8 @@
-﻿using FastCdc.Net;
-using FastCdcFs.Net.Reader;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using ZstdSharp;
 
-namespace FastCdcFs.Net.Writer;
+namespace FastCdcFs.Net;
 
 internal record DirectoryInfo(uint Id, uint ParentId, string Name);
 
@@ -51,7 +49,7 @@ public class FastCdcFsWriter(Options options)
 
     public void AddFile(byte[] data, string targetPath)
     {
-        var cdc = new FastCdc.Net.FastCdc(data, options.FastCdcMinSize, options.FastCdcAverageSize, options.FastCdcMaxSize);
+        var cdc = new FastCdc(data, options.FastCdcMinSize, options.FastCdcAverageSize, options.FastCdcMaxSize);
 
         using var ms = new MemoryStream(data);
 
@@ -175,7 +173,7 @@ public class FastCdcFsWriter(Options options)
         bw.Write(directory.Name);
     }
 
-    private ChunkInfo GetOrCreateChunk(Chunk chunk, Stream s)
+    private ChunkInfo GetOrCreateChunk(FastCdc.Chunk chunk, Stream s)
     {
         if (s.Position != chunk.Offset)
         {

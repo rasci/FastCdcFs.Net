@@ -2,7 +2,7 @@
 using System.Text;
 using ZstdSharp;
 
-namespace FastCdcFs.Net.Reader;
+namespace FastCdcFs.Net;
 
 public struct Range(uint offset, uint length)
 {

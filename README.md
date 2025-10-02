@@ -19,8 +19,6 @@ fastcdcfs build -o myfs.fastcdcfs
 ```
 #### Create the file system programmatically
 
-Use FastCdcFs.Writer
-
 ```csharp
 var writer = new FastCdcFsWriter(Options.Default);
 writer.AddFile("/file/to/add");
@@ -48,8 +46,6 @@ fastcdcfs extract --directory "non/root/destination/file" myfs.fastcdcfs --targe
 ```
 #### Read the file system programmatically
 
-Use FastCdcFs.Reader
-
 ```csharp
 using var reader = new CdcFsReader("myfs.fastcdcfs");
 
@@ -76,9 +72,9 @@ var stream = entry!.Open();
 ```
 +--------------------------------------------------------------------------------------+
 | [0x00..0x09]   magic: utf8 "FASTCDCFS"            | identifies file
-| [0x0A..0x0B]   mode: byte                         | identifies the file modes
-| [0x0D..0x0E]   directory count: u32               | number of directories
-| [0x0F..]       directory table: <repeated>
+| [0x0A..0x0B]   mode: byte                         | identifies the file system modes
+| [0x0C..0x0D]   directory count: u32               | number of directories
+| [0x0E..]       directory table: <repeated>
 | [..]              parent id: u32                  | parent id of directory
 | [..]              name: utf8                      | name of directory
 | [..]           files count: u32                   | number of files
@@ -90,7 +86,7 @@ var stream = entry!.Open();
 | [..]              file chunk table: <repeated>
 | [..]                  chunk id: u32               | chunk id
 | [..]           compression dict length: u32       | length of compression dict*
-| [..]           compression dict                   | compression dict*
+| [..]           compression dict: raw              | compression dict*
 | [..]           chunk boundary count: u32          | number of chunk boundaries
 | [..]           chunk boundary table: <repeated>
 | [..]              chunk length: u32               | length of chunk
@@ -98,7 +94,7 @@ var stream = entry!.Open();
 | [..]           chunks: raw                        | chunks
 +--------------------------------------------------------------------------------------+
 
-* only available when mode is not nozst
+* only available when mode is not nozstd
 ```
 
 - the utf8 string encoding uses a 7-bit encoded length prefix
@@ -108,6 +104,7 @@ var stream = entry!.Open();
 ### File System Modes
 
 ```
-None = 0x0
-NoZstd = 0x1
+None:   0x0
+NoZstd: 0x1
+NoHash: 0x2
 ```
