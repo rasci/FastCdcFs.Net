@@ -92,7 +92,7 @@ var stream = entry!.Open();
 | [..]           chunk boundary table: <repeated>
 | [..]              chunk length: u32               | length of chunk
 | [..]              compressed chunk length: u32    | length of compressed chunk *
-| [..]              xxHash64: u64                   | hash of the chunk **
+| [..]              hash: u64                       | xxHash64 of the chunk **
 | [..]           chunks: raw                        | chunks
 +--------------------------------------------------------------------------------------+
 

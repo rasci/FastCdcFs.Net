@@ -1,12 +1,25 @@
-﻿namespace Tests;
+﻿using FastCdcFs.Net;
+
+namespace Tests;
 
 public class EntryTests : TestBase
 {
 
-    [Fact]
-    public void OpenFile()
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void OpenFile(bool noZstd, bool noHash)
     {
-        using var reader = CreateDefaultReader();
+        var options = new Options(
+            Options.Default.FastCdcMinSize,
+            Options.Default.FastCdcAverageSize,
+            Options.Default.FastCdcMaxSize,
+            noZstd,
+            noHash);
+
+        using var reader = CreateReaderWith(options, DefaultFiles);
 
         foreach (var path in DefaultFiles)
         {
@@ -20,10 +33,21 @@ public class EntryTests : TestBase
         }
     }
 
-    [Fact]
-    public void ReadAllBytes()
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void ReadAllBytes(bool noZstd, bool noHash)
     {
-        using var reader = CreateDefaultReader();
+        var options = new Options(
+            Options.Default.FastCdcMinSize,
+            Options.Default.FastCdcAverageSize,
+            Options.Default.FastCdcMaxSize,
+            noZstd,
+            noHash);
+
+        using var reader = CreateReaderWith(options, DefaultFiles);
 
         foreach (var path in DefaultFiles)
         {

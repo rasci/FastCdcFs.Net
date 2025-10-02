@@ -17,11 +17,11 @@ public abstract class TestBase
         "dirB/fileF"];
 
     protected FastCdcFsReader CreateDefaultReader()
-        => CreateReaderWith(DefaultFiles);
+        => CreateReaderWith(Options.Default, DefaultFiles);
 
-    protected FastCdcFsReader CreateReaderWith(params string[] files)
+    protected FastCdcFsReader CreateReaderWith(Options options, params string[] files)
     {
-        var writer = new FastCdcFsWriter(Options.Default);
+        var writer = new FastCdcFsWriter(options);
         AddRandFiles(writer, files);
 
         var ms = new MemoryStream();

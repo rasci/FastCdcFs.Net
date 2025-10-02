@@ -80,8 +80,8 @@ public class FastCdcFsWriter(Options options)
 
         using var bw = new BinaryWriter(s, Encoding.UTF8, true);
         bw.Write("FastCdcFs"); // magic
-        bw.Write(Version); // magic
-        bw.Write((byte)(options.NoZstd ? Modes.NoZstd : Modes.None)); // version
+        bw.Write(Version);
+        bw.Write((byte)GetModes(options));
         WriteDirectories(bw);
         WriteFiles(bw);
         WriteChunks(bw);
@@ -241,5 +241,22 @@ public class FastCdcFsWriter(Options options)
         info = new DirectoryInfo(nextDirectoryId++, parent.Id, Path.GetFileName(path));
         directories.Add(path, info);
         return info;
+    }
+
+    private static Modes GetModes(Options options)
+    {
+        var mode = Modes.None;
+
+        if (options.NoZstd)
+        {
+            mode |= Modes.NoZstd;
+        }
+
+        if (options.NoHash)
+        {
+            mode |= Modes.NoHash;
+        }
+
+        return mode;
     }
 }
