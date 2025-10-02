@@ -1,41 +1,22 @@
-﻿using ZstdSharp;
-
-namespace FastCdcFs.Net;
+﻿namespace FastCdcFs.Net;
 
 public class FastCdcFsStream : Stream
 {
-    private readonly Stream s;
-    private readonly uint dataOffset;
-    private readonly Range[] chunks;
+    private readonly ChunkReader reader;
+    private readonly ChunkInfo[] chunkInfos;
     private readonly uint[] chunkIds;
-    private readonly bool compressed;
-    private Decompressor? decompressor;
 
-    private uint currentChunkIndex;
+    private int currentChunkIndex;
     private int chunkBytesLeft;
     private long position;
-    private Range currentRange;
-    private Stream? currentStream;
+    private ChunkInfo? currentChunkInfo;
+    private byte[]? currentChunk;
 
-    internal FastCdcFsStream(Stream s, uint dataOffset, byte[]? compressionDict, Range[] chunks, uint[] chunkIds, uint length, bool compressed)
+    internal FastCdcFsStream(ChunkReader reader, ChunkInfo[] chunkInfos, uint[] chunkIds)
     {
-        this.s = s;
-        this.dataOffset = dataOffset;
-        this.chunks = chunks;
+        this.reader = reader;
+        this.chunkInfos = chunkInfos;
         this.chunkIds = chunkIds;
-        this.compressed = compressed;
-
-        Length = length;
-
-        if (compressed)
-        {
-            decompressor = new Decompressor();
-            decompressor.LoadDictionary(compressionDict);
-        }
-        else
-        {
-            currentStream = s;
-        }
     }
 
     public override bool CanRead => true;
@@ -52,19 +33,21 @@ public class FastCdcFsStream : Stream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (currentChunkIndex is 0 && currentStream is null)
+        if (currentChunkIndex is 0 && currentChunk is null)
         {
-            OpenNextChunk();
+            ReadNextChunk();
         }
 
-        if (currentStream is null)
+        if (currentChunk is null)
             return 0;
 
         var totalRead = 0;
 
-        while (count > 0 && currentStream is not null)
+        while (count > 0 && currentChunk is not null)
         {
-            var read = currentStream.Read(buffer, offset, count > chunkBytesLeft ? chunkBytesLeft : count);
+            var read = count > chunkBytesLeft ? chunkBytesLeft : count;
+            Buffer.BlockCopy(currentChunk, (int)currentChunkInfo!.Length - chunkBytesLeft, buffer, offset, read);
+
             chunkBytesLeft -= read;
             offset += read;
             count -= read;
@@ -73,7 +56,7 @@ public class FastCdcFsStream : Stream
 
             if (read is 0 || chunkBytesLeft is 0)
             {
-                OpenNextChunk();
+                ReadNextChunk();
             }
         }
 
@@ -86,37 +69,18 @@ public class FastCdcFsStream : Stream
 
     public override void Write(byte[] buffer, int offset, int count) => throw new NotImplementedException();
 
-    protected override void Dispose(bool disposing)
+    private void ReadNextChunk()
     {
-        if (disposing && compressed)
-        {
-            decompressor!.Dispose();
-            currentStream?.Dispose();
-        }
-
-        base.Dispose(disposing);
-    }
-
-    private void OpenNextChunk()
-    {
-        if (compressed)
-        {
-            currentStream?.Dispose();
-        }
-
         if (currentChunkIndex >= chunkIds.Length)
         {
-            currentStream = null;
+            currentChunk = null;
             return;
         }
 
-        currentRange = chunks[chunkIds[currentChunkIndex++]];
-        chunkBytesLeft = (int)currentRange.Length;
-        s.Position = dataOffset + currentRange.Offset;
-
-        if (compressed)
-        {
-            currentStream = new DecompressionStream(s, decompressor, leaveOpen: true, preserveDecompressor: true);
-        }
+        var chunkId = chunkIds[currentChunkIndex];
+        currentChunk = reader.ReadChunk((int)chunkId);
+        currentChunkInfo = chunkInfos[chunkId];
+        currentChunkIndex++;
+        chunkBytesLeft = currentChunk.Length;
     }
 }

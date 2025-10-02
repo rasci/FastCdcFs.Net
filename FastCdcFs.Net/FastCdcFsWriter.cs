@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.IO.Hashing;
+using System.Security.Cryptography;
 using System.Text;
 using ZstdSharp;
 
@@ -12,9 +13,9 @@ internal record FileInfo(uint Id, uint DirectoryId, string Name, uint Length)
     public List<uint> ChunkIds { get; } = [];
 }
 
-public record Options(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdcMaxSize, bool NoZstd)
+public record Options(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdcMaxSize, bool NoZstd, bool NoHash)
 {
-    public static Options Default => new(1024 * 32, 1024 * 64, 1024 * 256, false);
+    public static Options Default => new(1024 * 32, 1024 * 64, 1024 * 256, false, false);
 
     public override string ToString()
         => $"FastCdcMinSize {FastCdcMinSize}, FastCdcAverageSize {FastCdcAverageSize}, FastCdcMaxSize {FastCdcMaxSize}";
@@ -27,6 +28,8 @@ public class FastCdcFsWriter(Options options)
         public uint NextOffset => Offset + (uint)Data.Length;
 
         public byte[]? CompressedData { get; set; }
+
+        public ulong xxHash64 { get; set; }
     }
 
     private readonly Dictionary<string, DirectoryInfo> directories = [];
@@ -86,21 +89,22 @@ public class FastCdcFsWriter(Options options)
 
     private void WriteChunks(BinaryWriter bw)
     {
-        if (!options.NoZstd)
-        {
-            CompressChunks(bw);
-        }
-        
+        HandleChunks(bw);
+
         bw.Write((uint)chunks.LongCount());
 
         foreach (var chunk in chunks)
         {
-            //bw.Write(options.NoZstd ? chunk.Data.Length : chunk.CompressedData!.Length);
             bw.Write(chunk.Data.Length);
 
             if (!options.NoZstd)
             {
                 bw.Write(chunk.CompressedData!.Length);
+            }
+
+            if (!options.NoHash)
+            {
+                bw.Write(chunk.xxHash64);
             }
         }
 
@@ -110,28 +114,47 @@ public class FastCdcFsWriter(Options options)
         }
     }
 
-    private void CompressChunks(BinaryWriter bw)
+    private void HandleChunks(BinaryWriter bw)
     {
-        var dict = DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
-        bw.Write((uint)dict.LongLength);
-        bw.Write(dict);
+        byte[] dict = [];
 
+        if (!options.NoZstd)
+        {
+            dict = DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
+            bw.Write((uint)dict.LongLength);
+            bw.Write(dict);
+        }
+            
         Parallel.ForEach(chunks, c =>
         {
-            using var compressor = new Compressor(22);
-            compressor.LoadDictionary(dict);
-
-            using var ms = new MemoryStream();
-            using (var cs = new CompressionStream(ms, compressor))
+            if (!options.NoZstd)
             {
-                cs.Write(c.Data);
-                cs.Flush();
+                using var compressor = new Compressor(22);
+                compressor.LoadDictionary(dict);
+
+                using var ms = new MemoryStream();
+                using (var cs = new CompressionStream(ms, compressor))
+                {
+                    cs.Write(c.Data);
+                    cs.Flush();
+                }
+
+                c.CompressedData = ms.ToArray();
             }
             
-            c.CompressedData = ms.ToArray();
+            if (!options.NoHash)
+            {
+                using var ms = new MemoryStream(c.Data);
+                var hasher = new XxHash64();
+                hasher.Append(ms);
+                c.xxHash64 = hasher.GetCurrentHashAsUInt64();
+            }
         });
 
-        CompressionRatePercentage = options.NoZstd ? 0 : (int)(100 - (double)chunks.Sum(c => c.CompressedData!.Length) / chunks.Sum(c => c.Data.Length) * 100);
+        if (!options.NoZstd)
+        {
+            CompressionRatePercentage = options.NoZstd ? 0 : (int)(100 - (double)chunks.Sum(c => c.CompressedData!.Length) / chunks.Sum(c => c.Data.Length) * 100);
+        }
     }
 
     private void WriteFiles(BinaryWriter bw)

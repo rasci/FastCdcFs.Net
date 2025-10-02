@@ -1,15 +1,14 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using ZstdSharp;
 
 namespace FastCdcFs.Net;
 
-public struct Range(uint offset, uint length)
+public record ChunkInfo(uint Offset, uint Length, ulong Hash)
 {
-    public uint Offset = offset, Length = length;
-
     public override string ToString()
-        => $"Offset {Offset} Length {Length}";
+        => Hash is 0
+            ? $"Offset {Offset} Length {Length}"
+            : $"Offset {Offset} Length {Length} Hash {Hash}";
 }
 
 public class Entry
@@ -47,24 +46,20 @@ public class Entry
             : throw new InvalidOperationException("Cannot open a directory");
 }
 
-public abstract class FastCdcFsException(string message) : Exception(message);
-
-public class InvalidFastCdcFsFileException(string path) : FastCdcFsException($"Invalid file {path}");
-
 public class FastCdcFsReader : IDisposable
 {
     private record InternalDirectoryEntry(uint Id, uint ParentId, string Name, string FullName);
 
     private readonly Dictionary<string, (uint Length, uint[] ChunkIds)> files = [];
+    private readonly ChunkReader chunkReader;
     private readonly Stream s;
     private readonly BinaryReader br;
-    private readonly bool leaveOpen, compressed;
+    private readonly bool leaveOpen, compressed, hashed;
 
-    private Modes mode;
     private InternalDirectoryEntry[] directories;
     private byte[]? compressionDict;
-    private Range[] chunks;
-    private uint dataOffset;
+    private ChunkInfo[] chunks;
+    private int dataOffset;
 
     public FastCdcFsReader(string path)
         : this(new FileStream(path, FileMode.Open, FileAccess.Read), false)
@@ -80,14 +75,16 @@ public class FastCdcFsReader : IDisposable
         if (br.ReadString() != "FastCdcFs")
             throw new InvalidFastCdcFsFileException("Not a FastCdcFs file");
 
-        mode = (Modes)br.ReadByte();
+        var mode = (Modes)br.ReadByte();
         compressed = (mode & Modes.NoZstd) is 0;
+        hashed = (mode & Modes.NoHash) is 0;
 
         ReadDirectories();
         ReadFiles();
         ReadChunks();
 
-        dataOffset = (uint)s.Position;
+        dataOffset = (int)s.Position;
+        chunkReader = new(s, compressed, hashed, compressionDict, chunks, dataOffset);
     }
 
     public Entry Get(string? path)
@@ -126,7 +123,7 @@ public class FastCdcFsReader : IDisposable
 
     internal Stream OpenFile(string path)
         => files.TryGetValue(path, out var e)
-            ? new FastCdcFsStream(s, dataOffset, compressionDict, chunks, e.ChunkIds, e.Length, compressed)
+            ? new FastCdcFsStream(chunkReader, chunks, e.ChunkIds)
             : throw new FileNotFoundException(path);
 
     internal byte[] ReadFile(string path)
@@ -139,37 +136,11 @@ public class FastCdcFsReader : IDisposable
 
         for (var i = 0; i < e.ChunkIds.Length; i++)
         {
+            var chunkId = e.ChunkIds[i];
             var range = chunks[e.ChunkIds[i]];
-
-            s.Position = dataOffset + range.Offset;
-
-            if (compressed)
-            {
-                using var decompressor = new Decompressor();
-                decompressor.LoadDictionary(compressionDict);
-
-                using var ds = new DecompressionStream(s, decompressor);
-
-                var total = 0;
-
-                while (total < range.Length)
-                {
-                    var read = ds.Read(data, (int)offset, (int)range.Length - total);
-                    offset += (uint)read;
-                    total += read;
-                }
-            }
-            else
-            {
-                var total = 0;
-
-                while (total < range.Length)
-                {
-                    var read = s.Read(data, (int)offset, (int)range.Length - total);
-                    offset += (uint)read;
-                    total += read;
-                }
-            }
+#warning get rid of mem cpy
+            chunkReader.ReadChunk((int)chunkId).CopyTo(data, offset);
+            offset += range.Length;
         }
 
         return data;
@@ -217,14 +188,16 @@ public class FastCdcFsReader : IDisposable
             br.Read(compressionDict, 0, compressionDict.Length);
         }
 
-        chunks = new Range[br.ReadUInt32()];
+        chunks = new ChunkInfo[br.ReadUInt32()];
         var offset = 0u;
 
         for (var i = 0u; i < chunks.Length; i++)
         {
             var length = br.ReadUInt32();
-            chunks[i] = new(offset, length);
-            offset += compressed ? br.ReadUInt32() : length;
+            var noff = compressed ? br.ReadUInt32() : length;
+            var hash = hashed ? br.ReadUInt64() : 0;
+            chunks[i] = new(offset, length, hash);
+            offset += noff;
         }
     }
 

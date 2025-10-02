@@ -85,16 +85,18 @@ var stream = entry!.Open();
 | [..]              chunk count: u32                | number of chunk ids
 | [..]              file chunk table: <repeated>
 | [..]                  chunk id: u32               | chunk id
-| [..]           compression dict length: u32       | length of compression dict*
-| [..]           compression dict: raw              | compression dict*
+| [..]           compression dict length: u32       | length of compression dict *
+| [..]           compression dict: raw              | compression dict *
 | [..]           chunk boundary count: u32          | number of chunk boundaries
 | [..]           chunk boundary table: <repeated>
 | [..]              chunk length: u32               | length of chunk
-| [..]              compressed chunk length: u32    | length of compressed chunk*
+| [..]              compressed chunk length: u32    | length of compressed chunk *
+| [..]              xxHash64: u64                   | hash of the chunk **
 | [..]           chunks: raw                        | chunks
 +--------------------------------------------------------------------------------------+
 
 * only available when mode is not nozstd
+* only available when mode is not nohash
 ```
 
 - the utf8 string encoding uses a 7-bit encoded length prefix
