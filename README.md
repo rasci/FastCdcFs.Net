@@ -72,9 +72,10 @@ var stream = entry!.Open();
 ```
 +--------------------------------------------------------------------------------------+
 | [0x00..0x09]   magic: utf8 "FASTCDCFS"            | identifies file
-| [0x0A..0x0B]   mode: byte                         | identifies the file system modes
-| [0x0C..0x0D]   directory count: u32               | number of directories
-| [0x0E..]       directory table: <repeated>
+| [0x0A..0x0B]   version: byte                      | identifies the file system version
+| [0x0C..0x0D]   mode: byte                         | identifies the file system modes
+| [0x0E..0x0F]   directory count: u32               | number of directories
+| [0x10..]       directory table: <repeated>
 | [..]              parent id: u32                  | parent id of directory
 | [..]              name: utf8                      | name of directory
 | [..]           files count: u32                   | number of files
@@ -96,7 +97,7 @@ var stream = entry!.Open();
 +--------------------------------------------------------------------------------------+
 
 * only available when mode is not nozstd
-* only available when mode is not nohash
+** only available when mode is not nohash
 ```
 
 - the utf8 string encoding uses a 7-bit encoded length prefix

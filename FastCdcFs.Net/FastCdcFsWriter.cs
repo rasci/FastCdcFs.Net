@@ -9,7 +9,6 @@ internal record DirectoryInfo(uint Id, uint ParentId, string Name);
 
 internal record FileInfo(uint Id, uint DirectoryId, string Name, uint Length)
 {
-
     public List<uint> ChunkIds { get; } = [];
 }
 
@@ -23,6 +22,8 @@ public record Options(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdc
 
 public class FastCdcFsWriter(Options options)
 {
+    public const byte Version = 1;
+
     private record ChunkInfo(uint Id, byte[] StrongHash, byte[] Data, uint Offset)
     {
         public uint NextOffset => Offset + (uint)Data.Length;
@@ -79,6 +80,7 @@ public class FastCdcFsWriter(Options options)
 
         using var bw = new BinaryWriter(s, Encoding.UTF8, true);
         bw.Write("FastCdcFs"); // magic
+        bw.Write(Version); // magic
         bw.Write((byte)(options.NoZstd ? Modes.NoZstd : Modes.None)); // version
         WriteDirectories(bw);
         WriteFiles(bw);

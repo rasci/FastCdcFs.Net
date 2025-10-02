@@ -75,6 +75,7 @@ public class FastCdcFsReader : IDisposable
         if (br.ReadString() != "FastCdcFs")
             throw new InvalidFastCdcFsFileException("Not a FastCdcFs file");
 
+        Version = br.ReadByte();
         var mode = (Modes)br.ReadByte();
         compressed = (mode & Modes.NoZstd) is 0;
         hashed = (mode & Modes.NoHash) is 0;
@@ -86,6 +87,8 @@ public class FastCdcFsReader : IDisposable
         dataOffset = (int)s.Position;
         chunkReader = new(s, compressed, hashed, compressionDict, chunks, dataOffset);
     }
+
+    public byte Version { get; private set; }
 
     public Entry Get(string? path)
     {
