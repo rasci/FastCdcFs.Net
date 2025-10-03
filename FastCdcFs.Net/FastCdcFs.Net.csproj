@@ -6,10 +6,15 @@
 	<Nullable>enable</Nullable>
 	<AssemblyName>FastCdcFs.Net</AssemblyName>
 	<RootNamespace>FastCdcFs.Net</RootNamespace>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
   	<PackageReference Include="System.IO.Hashing" Version="9.0.9" />
   	<PackageReference Include="ZstdSharp.Port" Version="0.8.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

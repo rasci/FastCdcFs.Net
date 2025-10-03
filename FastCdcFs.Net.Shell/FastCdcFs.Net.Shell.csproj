@@ -8,6 +8,7 @@
 	<AssemblyName>FastCdcFs.Net.Shell</AssemblyName>
 	<RootNamespace>FastCdcFs.Net.Shell</RootNamespace>
 	<ToolCommandName>fastcdcfs</ToolCommandName>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,4 +19,7 @@
     <ProjectReference Include="..\FastCdcFs.Net\FastCdcFs.Net.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>
