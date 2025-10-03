@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
 	<AssemblyName>FastCdcFs.Net.Shell</AssemblyName>
 	<RootNamespace>FastCdcFs.Net.Shell</RootNamespace>
+	<PackAsTool>true</PackAsTool>
 	<ToolCommandName>fastcdcfs</ToolCommandName>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
