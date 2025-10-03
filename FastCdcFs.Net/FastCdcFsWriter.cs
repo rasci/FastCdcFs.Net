@@ -30,7 +30,7 @@ public class FastCdcFsWriter(Options options)
 
         public byte[]? CompressedData { get; set; }
 
-        public ulong xxHash64 { get; set; }
+        public ulong XxHash64 { get; set; }
     }
 
     private readonly Dictionary<string, DirectoryInfo> directories = [];
@@ -69,7 +69,7 @@ public class FastCdcFsWriter(Options options)
 
     public void Build(string targetPath)
     {
-        using var fs = new FileStream(targetPath, FileMode.OpenOrCreate, FileAccess.Write);
+        using var fs = new FileStream(targetPath, FileMode.OpenOrCreate, options.NoHash ? FileAccess.Write : FileAccess.ReadWrite);
         fs.SetLength(0);
         Build(fs);
     }
@@ -106,14 +106,34 @@ public class FastCdcFsWriter(Options options)
 
             if (!options.NoHash)
             {
-                bw.Write(chunk.xxHash64);
+                bw.Write(chunk.XxHash64);
             }
+        }
+
+        if (!options.NoHash)
+        {
+            CreateAndWriteMetaDataHash(bw);
         }
 
         foreach (var chunk in chunks)
         {
             bw.Write(options.NoZstd ? chunk.Data : chunk.CompressedData!);
         }
+    }
+
+    private void CreateAndWriteMetaDataHash(BinaryWriter bw)
+    {
+        var position = bw.BaseStream.Position;
+        bw.BaseStream.Position = 0;
+
+        var data = new byte[position];
+        if (bw.BaseStream.Read(data, 0, data.Length) != data.Length)
+            throw new Exception("oops");
+
+        var hasher = new XxHash64();
+        hasher.Append(data);
+        var hash = hasher.GetCurrentHashAsUInt64();
+        bw.Write(hash);
     }
 
     private void HandleChunks(BinaryWriter bw)
@@ -149,7 +169,7 @@ public class FastCdcFsWriter(Options options)
                 using var ms = new MemoryStream(c.Data);
                 var hasher = new XxHash64();
                 hasher.Append(ms);
-                c.xxHash64 = hasher.GetCurrentHashAsUInt64();
+                c.XxHash64 = hasher.GetCurrentHashAsUInt64();
             }
         });
 

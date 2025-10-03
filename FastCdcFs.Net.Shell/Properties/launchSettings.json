@@ -6,7 +6,7 @@
     },
     "List": {
       "commandName": "Project",
-      "commandLineArgs": "list -d other \"d:\\work\\chunkfs\\structured-current-test.cdcfs\""
+      "commandLineArgs": "list \"D:\\work\\bcr\\firmware-images-smartbox.fastcdcfs\""
     },
     "Extract File": {
       "commandName": "Project",

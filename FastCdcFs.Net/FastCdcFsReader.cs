@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.IO.Hashing;
 using System.Text;
 
 namespace FastCdcFs.Net;
@@ -86,6 +87,11 @@ public class FastCdcFsReader : IDisposable
         ReadDirectories();
         ReadFiles();
         ReadChunks();
+
+        if (hashed)
+        {
+            ReadAndVerifyMetaHash();
+        }
 
         dataOffset = (int)s.Position;
         chunkReader = new(s, compressed, hashed, compressionDict, chunks, dataOffset);
@@ -183,6 +189,24 @@ public class FastCdcFsReader : IDisposable
         {
             s.Dispose();
         }
+    }
+
+    private void ReadAndVerifyMetaHash()
+    {
+        var pos = s.Position;
+
+        var metaData = new byte[pos];
+        s.Position = 0;
+
+        if (s.Read(metaData, 0, metaData.Length) != metaData.Length)
+            throw new FastCdcFsException("Cannot read metadata for hash verification");
+
+        var hasher = new XxHash64();
+        hasher.Append(metaData);
+        var currentHash = hasher.GetCurrentHashAsUInt64();
+        var expectedHash = br.ReadUInt64();
+        if (currentHash != expectedHash)
+            throw new CorruptedMetaDataException();
     }
 
     [MemberNotNull(nameof(chunks))]

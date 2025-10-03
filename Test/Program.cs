@@ -7,6 +7,9 @@ foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
 {
     Console.WriteLine($"adding {file}");
     writer.AddFile(file, Path.GetFileName(file));
+
+    if (i++ == 10)
+        break;
 }
 
 writer.Build(@"d:\work\bcr\firmware-images-smartbox.fastcdcfs");
