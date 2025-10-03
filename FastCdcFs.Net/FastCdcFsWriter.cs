@@ -123,12 +123,11 @@ public class FastCdcFsWriter(Options options)
 
     private void CreateAndWriteMetaDataHash(BinaryWriter bw)
     {
-        var position = bw.BaseStream.Position;
+        var data = new byte[bw.BaseStream.Position];
         bw.BaseStream.Position = 0;
 
-        var data = new byte[position];
         if (bw.BaseStream.Read(data, 0, data.Length) != data.Length)
-            throw new Exception("oops");
+            throw new FastCdcFsException("Unexpected count of bytes read");
 
         var hasher = new XxHash64();
         hasher.Append(data);
@@ -227,7 +226,7 @@ public class FastCdcFsWriter(Options options)
 
         var data = new byte[chunk.Length];        
         if (s.Read(data, 0, data.Length) != chunk.Length)
-            throw new Exception("oops");
+            throw new FastCdcFsException("Unexpected count of bytes read");
 
         using var sha = SHA256.Create();
         var strongHash = sha.ComputeHash(data);

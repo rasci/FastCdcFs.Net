@@ -193,9 +193,7 @@ public class FastCdcFsReader : IDisposable
 
     private void ReadAndVerifyMetaHash()
     {
-        var pos = s.Position;
-
-        var metaData = new byte[pos];
+        var metaData = new byte[s.Position];
         s.Position = 0;
 
         if (s.Read(metaData, 0, metaData.Length) != metaData.Length)
