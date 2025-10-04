@@ -9,6 +9,11 @@
 	  <LangVersion>preview</LangVersion>
 	  <AssemblyName>FastCdcFs.Net.Client</AssemblyName>
 	  <RootNamespace>FastCdcFs.Net.Client</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 
