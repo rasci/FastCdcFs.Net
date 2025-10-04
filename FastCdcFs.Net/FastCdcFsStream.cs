@@ -15,11 +15,12 @@ public class FastCdcFsStream : Stream
     private ChunkInfo? currentChunkInfo;
     private byte[]? currentChunk;
 
-    internal FastCdcFsStream(ChunkReader reader, ChunkInfo[] chunkInfos, uint[] chunkIds)
+    internal FastCdcFsStream(ChunkReader reader, ChunkInfo[] chunkInfos, uint length,  uint[] chunkIds)
     {
         this.reader = reader;
         this.chunkInfos = chunkInfos;
         this.chunkIds = chunkIds;
+        Length = length;
     }
 
     public override bool CanRead => true;

@@ -135,7 +135,7 @@ public class FastCdcFsReader : IDisposable
 
     internal Stream OpenFile(string path)
         => files.TryGetValue(path, out var e)
-            ? new FastCdcFsStream(chunkReader, chunks, e.ChunkIds)
+            ? new FastCdcFsStream(chunkReader, chunks, e.Length, e.ChunkIds)
             : throw new FileNotFoundException(path);
 
     internal byte[] ReadFile(string path)
