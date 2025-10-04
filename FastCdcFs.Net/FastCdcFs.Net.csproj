@@ -9,6 +9,12 @@
 	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+
   <ItemGroup>
   	<PackageReference Include="System.IO.Hashing" Version="9.0.9" />
   	<PackageReference Include="ZstdSharp.Port" Version="0.8.6" />
