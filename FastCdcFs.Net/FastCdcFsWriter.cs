@@ -108,8 +108,22 @@ public class FastCdcFsWriter(Options options)
         bw.Write("FastCdcFs"); // magic
         bw.Write(Version);
         bw.Write((byte)GetModes(options));
-        WriteDirectories(bw);
-        WriteFiles(bw);
+
+        // write metadata
+        using var memoryStream = new MemoryStream();
+        using var compressionStream = new ZstdSharp.CompressionStream(memoryStream, new Compressor(22));
+        using var bwMeta = new BinaryWriter(compressionStream, Encoding.UTF8, true);
+        WriteDirectories(bwMeta);
+        WriteFiles(bwMeta);
+        compressionStream.Flush();
+        var compressedMetaData = memoryStream.ToArray();
+
+        // write length of metadata and metadata
+        if (compressedMetaData.LongLength > uint.MaxValue)
+            throw new InvalidOperationException("Compressed metadata exceeds 4GB and cannot be written as a 4-byte length.");
+        bw.Write((uint)compressedMetaData.LongLength);
+        bw.Write(compressedMetaData);
+
         WriteChunks(bw);
 
         Length = s.Position - pos;
