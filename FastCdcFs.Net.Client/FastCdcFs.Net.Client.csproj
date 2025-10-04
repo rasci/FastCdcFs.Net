@@ -11,6 +11,12 @@
 	  <RootNamespace>FastCdcFs.Net.Client</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Humanizer" Version="3.0.0-beta.96" />
   </ItemGroup>
