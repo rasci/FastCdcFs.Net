@@ -32,6 +32,12 @@ public class BuildArgs : BaseArgs
 
     [MemberNotNullWhen(true, nameof(Output))]
     public bool IsOutput => !string.IsNullOrEmpty(Output);
+
+    [Option("no-zstd", Required = false, HelpText = "Do not compress chunks with zstd")]
+    public bool NoZstd { get; set; }
+
+    [Option("no-hash", Required = false, HelpText = "Do not hash meta data and chunks for read-time verification")]
+    public bool NoHash { get; set; }
 }
 
 [Verb("list")]

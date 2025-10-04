@@ -18,7 +18,7 @@ internal class Handler
         if (a.IsOutput)
         {
             var cache = Cache.ReadAndDelete();
-            var writer = new FastCdcFsWriter(Options.Default);
+            var writer = new FastCdcFsWriter(CreateOptions(a));
 
             foreach (var file in cache.Files)
             {
@@ -126,4 +126,12 @@ internal class Handler
             }
         }
     }
+
+    private static Options CreateOptions(BuildArgs a)
+        => new(
+            Options.Default.FastCdcMinSize,
+            Options.Default.FastCdcAverageSize,
+            Options.Default.FastCdcMaxSize,
+            a.NoZstd,
+            a.NoHash);
 }
