@@ -1,4 +1,6 @@
-﻿namespace FastCdcFs.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace FastCdcFs.Net;
 
 public class FastCdcFsStream : Stream
 {
@@ -7,6 +9,7 @@ public class FastCdcFsStream : Stream
     private readonly uint[] chunkIds;
 
     private int currentChunkIndex;
+    private uint currentChunkId;
     private int chunkBytesLeft;
     private long position;
     private ChunkInfo? currentChunkInfo;
@@ -31,56 +34,85 @@ public class FastCdcFsStream : Stream
 
     public override void Flush() => throw new NotSupportedException();
 
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+    public override void SetLength(long value) => throw new NotSupportedException();
+
+    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (currentChunkIndex is 0 && currentChunk is null)
+        if (currentChunkIndex is 0 && currentChunkInfo is null)
         {
-            ReadNextChunk();
+            NextChunk();
         }
 
-        if (currentChunk is null)
+        if (currentChunkInfo is null)
             return 0;
 
         var totalRead = 0;
 
-        while (count > 0 && currentChunk is not null)
+        while (count > 0 && currentChunkInfo is not null)
         {
-            var read = count > chunkBytesLeft ? chunkBytesLeft : count;
-            Buffer.BlockCopy(currentChunk, (int)currentChunkInfo!.Length - chunkBytesLeft, buffer, offset, read);
-
-            chunkBytesLeft -= read;
-            offset += read;
-            count -= read;
-            totalRead += read;
-            position += read;
-
-            if (read is 0 || chunkBytesLeft is 0)
+            if (currentChunk is not null || (int)currentChunkInfo!.Length > count)
             {
-                ReadNextChunk();
+                // if not hashed, we could optimize this by reading directly to the user buffer
+
+                if (currentChunk is null)
+                {
+                    ReadNextChunk();
+                }
+
+                var read = count > chunkBytesLeft ? chunkBytesLeft : count;
+                Buffer.BlockCopy(currentChunk, (int)currentChunkInfo!.Length - chunkBytesLeft, buffer, offset, read);
+
+                chunkBytesLeft -= read;
+                offset += read;
+                count -= read;
+                totalRead += read;
+                position += read;
+
+                if (read is 0 || chunkBytesLeft is 0)
+                {
+                    NextChunk();
+                }
+            }
+
+            else
+            {
+                // we can directly read the chunk in the user buffer
+                reader.ReadChunk(currentChunkId, currentChunkInfo, buffer, offset);
+                offset += (int)currentChunkInfo!.Length;
+                count -= (int)currentChunkInfo!.Length;
+                totalRead += (int)currentChunkInfo!.Length;
+                position += (int)currentChunkInfo!.Length;
+                NextChunk();
             }
         }
 
         return totalRead;
     }
 
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotImplementedException();
-
-    public override void SetLength(long value) => throw new NotImplementedException();
-
-    public override void Write(byte[] buffer, int offset, int count) => throw new NotImplementedException();
-
+    [MemberNotNull(nameof(currentChunk))]
     private void ReadNextChunk()
     {
+        currentChunk = new byte[currentChunkInfo!.Length];
+        reader.ReadChunk(currentChunkId, currentChunkInfo, currentChunk, 0);
+        chunkBytesLeft = currentChunk.Length;
+    }
+
+    private void NextChunk()
+    {
+        currentChunk = null;
+
         if (currentChunkIndex >= chunkIds.Length)
         {
-            currentChunk = null;
+            currentChunkInfo = null;
             return;
         }
 
-        var chunkId = chunkIds[currentChunkIndex];
-        currentChunk = reader.ReadChunk((int)chunkId);
-        currentChunkInfo = chunkInfos[chunkId];
+        currentChunkId = chunkIds[currentChunkIndex];
+        currentChunkInfo = chunkInfos[currentChunkId];
         currentChunkIndex++;
-        chunkBytesLeft = currentChunk.Length;
     }
 }

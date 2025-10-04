@@ -2,7 +2,7 @@
   "profiles": {
     "Build from DLBs directory": {
       "commandName": "Project",
-      "commandLineArgs": "build -d \"d:\\work\\chunkfs\\dlbs\" -o \"d:\\work\\chunkfs\\shell.zstd.cdcfs\""
+      "commandLineArgs": "build -d D:\\work\\bcr\\current-dlbs -o D:\\work\\bcr\\firmware-images-smartbox2.fastcdcfs"
     },
     "List": {
       "commandName": "Project",

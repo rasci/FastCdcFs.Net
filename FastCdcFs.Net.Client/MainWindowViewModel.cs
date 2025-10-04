@@ -39,8 +39,8 @@ internal class MainWindowViewModel : ViewModelBase
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Open CDCFS file",
-            Filter = "CDCFS files (*.cdcfs)|*.cdcfs|All files (*.*)|*.*",
+            Title = "Open FastCdcFs file",
+            Filter = "FastCdcFs files (*.fastcdcfs)|*.fastcdcfs|All files (*.*)|*.*",
             CheckFileExists = true,
             CheckPathExists = true,
             Multiselect = false

@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set VERSION=1.0.0-alpha03
+set VERSION=1.0.0-alpha05
 
 REM test before packing
 

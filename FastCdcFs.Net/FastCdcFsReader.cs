@@ -94,7 +94,7 @@ public class FastCdcFsReader : IDisposable
         }
 
         dataOffset = (int)s.Position;
-        chunkReader = new(s, compressed, hashed, compressionDict, chunks, dataOffset);
+        chunkReader = new(s, compressed, hashed, compressionDict, dataOffset);
     }
 
     public byte Version { get; private set; }
@@ -144,15 +144,14 @@ public class FastCdcFsReader : IDisposable
             throw new FileNotFoundException(path);
 
         var data = new byte[e.Length];
-        var offset = 0u;
+        var offset = 0;
 
         for (var i = 0; i < e.ChunkIds.Length; i++)
         {
             var chunkId = e.ChunkIds[i];
-            var range = chunks[e.ChunkIds[i]];
-#warning get rid of mem cpy
-            chunkReader.ReadChunk((int)chunkId).CopyTo(data, offset);
-            offset += range.Length;
+            var chunkInfo = chunks[e.ChunkIds[i]];
+            chunkReader.ReadChunk(chunkId, chunkInfo, data, offset);
+            offset += (int)chunkInfo.Length;
         }
 
         return data;

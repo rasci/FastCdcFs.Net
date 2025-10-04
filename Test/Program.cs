@@ -1,20 +1,19 @@
 ﻿using FastCdcFs.Net;
 
-var writer = new FastCdcFsWriter(Options.Default);
-
+var cdcfsfs = @"d:\work\bcr\firmware-images-smartbox-new-header-cache.fastcdcfs";
 var i = 0;
-foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
-{
-    Console.WriteLine($"adding {file}");
-    writer.AddFile(file, Path.GetFileName(file));
 
-    if (i++ == 10)
-        break;
-}
+//var writer = new FastCdcFsWriter(Options.Default);
 
-writer.Build(@"d:\work\bcr\firmware-images-smartbox.fastcdcfs");
+//foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
+//{
+//    Console.WriteLine($"adding {file}");
+//    writer.AddFile(file, Path.GetFileName(file));
+//}
 
-using var reader = new FastCdcFsReader(File.OpenRead(@"d:\work\bcr\firmware-images-smartbox.fastcdcfs"));
+//writer.Build(cdcfsfs);
+
+using var reader = new FastCdcFsReader(File.OpenRead(cdcfsfs));
 
 foreach (var entry in reader.List())
 {
