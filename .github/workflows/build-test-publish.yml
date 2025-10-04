@@ -62,4 +62,6 @@ jobs:
         dotnet pack FastCdcFs.Net/FastCdcFs.Net.Shell.csproj -c Release -p:Version="${GITHUB_REF_NAME}" -o ./publish
     
     - name: Publish to NuGet
-      run: dotnet nuget push "./publish/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+      run: |
+        dotnet nuget push "./publish/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }}
+        dotnet nuget push "./publish/*.snupkg" --api-key ${{ secrets.NUGET_API_KEY }}
