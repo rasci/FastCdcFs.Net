@@ -60,7 +60,7 @@ jobs:
     - name: Pack NuGet package
       run: |
         dotnet pack FastCdcFs.Net/FastCdcFs.Net.csproj       -c Release -p:Version="${GITHUB_REF_NAME}" -o ./publish
-        dotnet pack FastCdcFs.Net/FastCdcFs.Net.Shell.csproj -c Release -p:Version="${GITHUB_REF_NAME}" -o ./publish
+        dotnet pack FastCdcFs.Net.Shell/FastCdcFs.Net.Shell.csproj -c Release -p:Version="${GITHUB_REF_NAME}" -o ./publish
     
     - name: Publish to NuGet
       run: |
