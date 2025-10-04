@@ -1,6 +1,7 @@
 name: Build, Test and Publish
 
 on:
+  create:
   push:
     branches: [ main, develop ]
     tags:
