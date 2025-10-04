@@ -119,6 +119,8 @@ public class FastCdcFsWriter(Options options)
         var compressedMetaData = memoryStream.ToArray();
 
         // write length of metadata and metadata
+        if (compressedMetaData.LongLength > uint.MaxValue)
+            throw new InvalidOperationException("Compressed metadata exceeds 4GB and cannot be written as a 4-byte length.");
         bw.Write((uint)compressedMetaData.LongLength);
         bw.Write(compressedMetaData);
 
