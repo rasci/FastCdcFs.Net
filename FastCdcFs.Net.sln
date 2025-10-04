@@ -12,8 +12,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{0E81CB6B-E1DA-4135-A1ED-344AAC092521}"
 	ProjectSection(SolutionItems) = preProject
 		AGENT.md = AGENT.md
-		.github\workflows\build-and-test.yml = .github\workflows\build-and-test.yml
 		build.cmd = build.cmd
+		.github\workflows\build-test-publish.yml = .github\workflows\build-test-publish.yml
 		README.md = README.md
 	EndProjectSection
 EndProject
