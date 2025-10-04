@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastCdcFs.Net.Shell", "Fast
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{0E81CB6B-E1DA-4135-A1ED-344AAC092521}"
 	ProjectSection(SolutionItems) = preProject
+		AGENT.md = AGENT.md
+		.github\workflows\build-and-test.yml = .github\workflows\build-and-test.yml
 		build.cmd = build.cmd
 		README.md = README.md
 	EndProjectSection
