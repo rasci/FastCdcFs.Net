@@ -16,12 +16,38 @@ public record Options(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdc
 {
     public static Options Default => new(1024 * 32, 1024 * 64, 1024 * 256, false, false);
 
+    public Options WithNoZstd(bool noZstd = true)
+        => this with { NoZstd = noZstd };
+        
+    public Options WithNoHash(bool noHash = true)
+        => this with { NoHash = noHash };
+
+    public Options WithChunkSizes(uint minSize, uint averageSize, uint maxSize)
+    {
+        if (minSize == 0 || averageSize == 0 || maxSize == 0)
+            throw new ArgumentException("Chunk sizes must be greater than zero");
+
+        if (minSize > averageSize)
+            throw new ArgumentException("Min size must be less than or equal to average size");
+
+        if (averageSize > maxSize)
+            throw new ArgumentException("Average size must be less than or equal to max size");
+
+        return this with { FastCdcMinSize = minSize, FastCdcAverageSize = averageSize, FastCdcMaxSize = maxSize };
+    }
+
     public override string ToString()
         => $"FastCdcMinSize {FastCdcMinSize}, FastCdcAverageSize {FastCdcAverageSize}, FastCdcMaxSize {FastCdcMaxSize}";
 }
 
 public class FastCdcFsWriter(Options options)
 {
+
+    public FastCdcFsWriter(Func<Options, Options>? configure = null)
+        : this(configure?.Invoke(Options.Default) ?? Options.Default)
+    {
+    }
+
     public const byte Version = 1;
 
     private record ChunkInfo(uint Id, byte[] StrongHash, byte[] Data, uint Offset)

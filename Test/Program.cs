@@ -3,7 +3,7 @@
 var cdcfsfs = @"d:\work\bcr\firmware-images-smartbox-new-header-cache.fastcdcfs";
 var i = 0;
 
-//var writer = new FastCdcFsWriter(Options.Default);
+var writer = new FastCdcFsWriter(o => o.WithChunkSizes(32 * 1024, 64 * 1024, 256 * 1024));
 
 //foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
 //{
