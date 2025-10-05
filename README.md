@@ -95,7 +95,7 @@ var stream = entry!.Open();
 | [..]         | |    compressed chunk length: u32  | length of compressed chunk *
 | [..]          -     chunk hash: u64               | xxHash64 of the chunk **
 | [..]              meta data hash: u64             | xxHash64 of the meta data **
-| [..]              chunks: raw                     | chunks
+| [..]              chunk blobs: raw                | chunk blobs
 +--------------------------------------------------------------------------------------+
 
 * only available when the mode is not nozstd
