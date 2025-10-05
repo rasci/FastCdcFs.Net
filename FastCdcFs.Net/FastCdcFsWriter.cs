@@ -13,39 +13,13 @@ internal record FileInfo(uint Id, uint DirectoryId, string Name, uint Length)
     public List<uint> ChunkIds { get; } = [];
 }
 
-public record Options(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdcMaxSize, bool NoZstd, bool NoHash)
-{
-    public static Options Default => new(1024 * 32, 1024 * 64, 1024 * 256, false, false);
 
-    public Options WithNoZstd(bool noZstd = true)
-        => this with { NoZstd = noZstd };
-        
-    public Options WithNoHash(bool noHash = true)
-        => this with { NoHash = noHash };
 
-    public Options WithChunkSizes(uint minSize, uint averageSize, uint maxSize)
-    {
-        if (minSize == 0 || averageSize == 0 || maxSize == 0)
-            throw new ArgumentException("Chunk sizes must be greater than zero");
-
-        if (minSize > averageSize)
-            throw new ArgumentException("Min size must be less than or equal to average size");
-
-        if (averageSize > maxSize)
-            throw new ArgumentException("Average size must be less than or equal to max size");
-
-        return this with { FastCdcMinSize = minSize, FastCdcAverageSize = averageSize, FastCdcMaxSize = maxSize };
-    }
-
-    public override string ToString()
-        => $"FastCdcMinSize {FastCdcMinSize}, FastCdcAverageSize {FastCdcAverageSize}, FastCdcMaxSize {FastCdcMaxSize}";
-}
-
-public class FastCdcFsWriter(Options options)
+public class FastCdcFsWriter(FastCdcFsOptions options)
 {
 
-    public FastCdcFsWriter(Func<Options, Options>? configure = null)
-        : this(configure?.Invoke(Options.Default) ?? Options.Default)
+    public FastCdcFsWriter(Func<FastCdcFsOptions, FastCdcFsOptions>? configure = null)
+        : this(configure?.Invoke(FastCdcFsOptions.Default) ?? FastCdcFsOptions.Default)
     {
     }
 
@@ -120,7 +94,7 @@ public class FastCdcFsWriter(Options options)
         using var memoryStream = new MemoryStream();
         using var metaStream = options.NoZstd
             ? (Stream)memoryStream
-            : new CompressionStream(memoryStream, new Compressor(22));
+            : new CompressionStream(memoryStream, new Compressor(options.CompressionLevel));
         using var metaBw = new BinaryWriter(metaStream, Encoding.UTF8, true);
 
         WriteDirectories(metaBw);
@@ -195,7 +169,7 @@ public class FastCdcFsWriter(Options options)
         {
             if (!options.NoZstd)
             {
-                using var compressor = new Compressor(22);
+                using var compressor = new Compressor(options.CompressionLevel);
                 compressor.LoadDictionary(compressionDict);
 
                 using var ms = new MemoryStream();
@@ -309,7 +283,7 @@ public class FastCdcFsWriter(Options options)
         return info;
     }
 
-    private static Modes GetModes(Options options)
+    private static Modes GetModes(FastCdcFsOptions options)
     {
         var mode = Modes.None;
 

@@ -127,11 +127,12 @@ internal class Handler
         }
     }
 
-    private static Options CreateOptions(BuildArgs a)
+    private static FastCdcFsOptions CreateOptions(BuildArgs a)
         => new(
-            Options.Default.FastCdcMinSize,
-            Options.Default.FastCdcAverageSize,
-            Options.Default.FastCdcMaxSize,
+            FastCdcFsOptions.Default.FastCdcMinSize,
+            FastCdcFsOptions.Default.FastCdcAverageSize,
+            FastCdcFsOptions.Default.FastCdcMaxSize,
             a.NoZstd,
-            a.NoHash);
+            a.NoHash,
+            a.CompressionLevel);
 }

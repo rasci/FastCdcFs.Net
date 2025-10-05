@@ -13,9 +13,9 @@ public class EntryTests : TestBase
     public void OpenFile(bool noZstd, bool noHash)
     {
         var options = new Options(
-            Options.Default.FastCdcMinSize,
-            Options.Default.FastCdcAverageSize,
-            Options.Default.FastCdcMaxSize,
+            FastCdcFsOptions.Default.FastCdcMinSize,
+            FastCdcFsOptions.Default.FastCdcAverageSize,
+            FastCdcFsOptions.Default.FastCdcMaxSize,
             noZstd,
             noHash);
 
@@ -41,9 +41,9 @@ public class EntryTests : TestBase
     public void ReadAllBytes(bool noZstd, bool noHash)
     {
         var options = new Options(
-            Options.Default.FastCdcMinSize,
-            Options.Default.FastCdcAverageSize,
-            Options.Default.FastCdcMaxSize,
+            FastCdcFsOptions.Default.FastCdcMinSize,
+            FastCdcFsOptions.Default.FastCdcAverageSize,
+            FastCdcFsOptions.Default.FastCdcMaxSize,
             noZstd,
             noHash);
 

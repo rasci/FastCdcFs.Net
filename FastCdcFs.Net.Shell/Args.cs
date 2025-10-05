@@ -38,6 +38,9 @@ public class BuildArgs : BaseArgs
 
     [Option("no-hash", Required = false, HelpText = "Do not hash meta data and chunks for read-time verification")]
     public bool NoHash { get; set; }
+
+    [Option("compression-level", Required = false, Default = FastCdcFsOptions.DefaultCompressionLevel, HelpText = "Zstd compression level")]
+    public int CompressionLevel { get; set; }
 }
 
 [Verb("list")]
