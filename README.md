@@ -71,35 +71,38 @@ var stream = entry!.Open();
 
 ```
 +--------------------------------------------------------------------------------------+
-| [0x00..0x08]   magic: utf8 "FASTCDCFS"            | identifies file
-| [0x09..0x09]   version: byte                      | identifies the file system version
-| [0x0A..0x0A]   mode: byte                         | identifies the file system modes
-| [0x0B..0x0C]   directory count: u32               | number of directories
-| [0x0D..]       directory table: <repeated>
-| [..]              parent id: u32                  | parent id of directory
-| [..]              name: utf8                      | name of directory
-| [..]           files count: u32                   | number of files
-| [..]           files table: <repeated>
-| [..]              directory id: u32               | id of directory
-| [..]              name: utf8                      | name of file
-| [..]              length: u32                     | length of file
-| [..]              chunk count: u32                | number of chunk ids
-| [..]              file chunk table: <repeated>
-| [..]                  chunk id: u32               | chunk id
-| [..]           compression dict length: u32       | length of compression dict *
-| [..]           compression dict: raw              | compression dict *
-| [..]           chunk boundary count: u32          | number of chunk boundaries
-| [..]           chunk boundary table: <repeated>
-| [..]              chunk length: u32               | length of chunk
-| [..]              compressed chunk length: u32    | length of compressed chunk *
-| [..]              hash: u64                       | xxHash64 of the chunk **
-| [..]           chunks: raw                        | chunks
+| [0x00..0x08]      magic: utf8 "FASTCDCFS"         | identifies file
+| [0x09..0x09]      version: byte                   | identifies the file system version
+| [0x0A..0x0A]      mode: byte                      | identifies the file system modes
+| [0x0A..0x0A]      meta data length: u32           | length of metadata
+| [0x0B..0x0C]  -   directory count: u32            | number of directories
+| [0x0D..]     |C|  directory table: <repeated>
+| [..]         |O|    parent id: u32                | parent id of directory
+| [..]         |M|    name: utf8                    | name of directory
+| [..]         |P|  files count: u32                | number of files
+| [..]         |R|  files table: <repeated>
+| [..]         |E|    directory id: u32             | id of directory
+| [..]         |S|    name: utf8                    | name of file
+| [..]         |S|    length: u32                   | length of file
+| [..]         |E|    chunk count: u32              | number of chunk ids
+| [..]         |D|    file chunk table: <repeated>
+| [..]         |.|      chunk id: u32               | chunk id
+| [..]         |.|  compression dict length: u32    | length of compression dict *
+| [..]         |.|  compression dict: raw           | compression dict *
+| [..]         |.|  chunk boundary count: u32       | number of chunk boundaries
+| [..]         |.|  chunk boundary table: <repeated>
+| [..]         |.|    chunk length: u32             | length of chunk
+| [..]         | |    compressed chunk length: u32  | length of compressed chunk *
+| [..]          -     chunk hash: u64               | xxHash64 of the chunk **
+| [..]              meta data hash: u64             | xxHash64 of the meta data **
+| [..]              chunks: raw                     | chunks
 +--------------------------------------------------------------------------------------+
 
-* only available when mode is not nozstd
-** only available when mode is not nohash
+* only available when the mode is not nozstd
+** only available when the mode is not nohash
 ```
 
+- the meta data is only compressed when the mode is not nozstd
 - the utf8 string encoding uses a 7-bit encoded length prefix
 - the id of a directory is the index in the directory table
 - the id of a chunk is the index in the chunk boundary table
