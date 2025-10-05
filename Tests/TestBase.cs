@@ -19,16 +19,22 @@ public abstract class TestBase
     protected FastCdcFsReader CreateDefaultReader()
         => CreateReaderWith(FastCdcFsOptions.Default, DefaultFiles);
 
+    protected void CreateDefaultFile(Stream stream)
+        => CreateFile(FastCdcFsOptions.Default, stream, DefaultFiles);
+
     protected FastCdcFsReader CreateReaderWith(FastCdcFsOptions options, params string[] files)
+    {
+        var ms = new MemoryStream();
+        CreateFile(options, ms, files);
+        return new(ms);
+    }
+
+    protected void CreateFile(FastCdcFsOptions options, Stream stream, params string[] files)
     {
         var writer = new FastCdcFsWriter(options);
         AddRandFiles(writer, files);
-
-        var ms = new MemoryStream();
-        writer.Build(ms);
-
-        ms.Position = 0;
-        return new(ms);
+        writer.Build(stream);
+        stream.Position = 0;
     }
 
     protected void AddRandFiles(FastCdcFsWriter writer, params string[] paths)

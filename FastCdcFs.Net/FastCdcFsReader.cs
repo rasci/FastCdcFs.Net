@@ -199,7 +199,7 @@ public class FastCdcFsReader : IDisposable
     {
         br.Dispose();
 
-        if (leaveOpen)
+        if (!leaveOpen)
         {
             s.Dispose();
         }
