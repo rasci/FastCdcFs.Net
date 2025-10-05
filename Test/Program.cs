@@ -5,15 +5,20 @@ var i = 0;
 
 var writer = new FastCdcFsWriter(o => o.WithChunkSizes(32 * 1024, 64 * 1024, 256 * 1024));
 
-//foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
-//{
-//    Console.WriteLine($"adding {file}");
-//    writer.AddFile(file, Path.GetFileName(file));
-//}
+foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
+{
+    Console.WriteLine($"adding {file}");
+    writer.AddFile(file, Path.GetFileName(file));
 
-//writer.Build(cdcfsfs);
+    i++;
+    if (i == 2)
+        break;
+}
 
-using var reader = new FastCdcFsReader(File.OpenRead(cdcfsfs));
+using var mems = new MemoryStream();
+writer.Build(mems);
+mems.Position = 0;
+using var reader = new FastCdcFsReader(mems);
 
 foreach (var entry in reader.List())
 {

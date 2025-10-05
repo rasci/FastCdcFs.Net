@@ -84,25 +84,32 @@ public class FastCdcFsReader : IDisposable
         compressed = (mode & Modes.NoZstd) is 0;
         hashed = (mode & Modes.NoHash) is 0;
 
-        var metadataSize = br.ReadUInt32();
-        var compressedMetaData = br.ReadBytes((int)metadataSize);
-
-        using var ms = new MemoryStream(compressedMetaData);
-        using var metaDataStream = new ZstdSharp.DecompressionStream(ms);
-        using var metaDataReader = new BinaryReader(metaDataStream, Encoding.UTF8, true);
-
-        ReadDirectories(metaDataReader);
-        ReadFiles(metaDataReader);
-
-        ReadChunks();
-
-        if (hashed)
-        {
-            ReadAndVerifyMetaHash();
-        }
+        ReadMetaData();
 
         dataOffset = (int)s.Position;
         chunkReader = new(s, compressed, hashed, compressionDict, dataOffset);
+    }
+
+    [MemberNotNull(nameof(directories), nameof(chunks))]
+    private void ReadMetaData()
+    {
+        var metaDataLength = br.ReadUInt32();
+        var metaData = br.ReadBytes((int)metaDataLength);
+
+        if (hashed)
+        {
+            VerifyMetaHash(metaData);
+        }
+
+        using var memoryStream = new MemoryStream(metaData);
+        using var metaStream = compressed
+            ? (Stream)new ZstdSharp.DecompressionStream(memoryStream)
+            : memoryStream;
+        using var metaBr = new BinaryReader(metaStream, Encoding.UTF8, true);
+
+        ReadDirectories(metaBr);
+        ReadFiles(metaBr);
+        ReadChunks(metaBr);
     }
 
     public byte Version { get; private set; }
@@ -198,14 +205,8 @@ public class FastCdcFsReader : IDisposable
         }
     }
 
-    private void ReadAndVerifyMetaHash()
+    private void VerifyMetaHash(byte[] metaData)
     {
-        var metaData = new byte[s.Position];
-        s.Position = 0;
-
-        if (s.Read(metaData, 0, metaData.Length) != metaData.Length)
-            throw new FastCdcFsException("Cannot read metadata for hash verification");
-
         var hasher = new XxHash64();
         hasher.Append(metaData);
         var currentHash = hasher.GetCurrentHashAsUInt64();
@@ -215,12 +216,12 @@ public class FastCdcFsReader : IDisposable
     }
 
     [MemberNotNull(nameof(chunks))]
-    private void ReadChunks()
+    private void ReadChunks(BinaryReader br)
     {
         if (compressed)
         {
             compressionDict = new byte[br.ReadUInt32()];
-            br.Read(compressionDict, 0, compressionDict.Length);
+            FastCdcFsHelper.Read(br.BaseStream, compressionDict, 0, compressionDict.Length);
         }
 
         chunks = new ChunkInfo[br.ReadUInt32()];
@@ -236,43 +237,43 @@ public class FastCdcFsReader : IDisposable
         }
     }
 
-    private void ReadFiles(BinaryReader metaDataReader)
+    private void ReadFiles(BinaryReader br)
     {
-        var files = metaDataReader.ReadUInt32();
+        var files = br.ReadUInt32();
 
         for (var i = 0u; i < files; i++)
         {
-            ReadFile(metaDataReader, i);
+            ReadFile(br, i);
         }
     }
 
-    private void ReadFile(BinaryReader metaDataReader, uint fileId)
+    private void ReadFile(BinaryReader br, uint fileId)
     {
-        var directoryId = metaDataReader.ReadUInt32();
-        var name = metaDataReader.ReadString();
-        var length = metaDataReader.ReadUInt32();
+        var directoryId = br.ReadUInt32();
+        var name = br.ReadString();
+        var length = br.ReadUInt32();
 
-        var chunkIds = new uint[metaDataReader.ReadUInt32()];
+        var chunkIds = new uint[br.ReadUInt32()];
 
         for (var i = 0; i < chunkIds.Length; i++)
         {
-            chunkIds[i] = metaDataReader.ReadUInt32();
+            chunkIds[i] = br.ReadUInt32();
         }
 
         files.Add(FastCdcFsHelper.PathCombine(directories[directoryId].FullName, name), (length, chunkIds));
     }
 
     [MemberNotNull(nameof(directories))]
-    private void ReadDirectories(BinaryReader metaDataReader)
+    private void ReadDirectories(BinaryReader br)
     {
-        var length = metaDataReader.ReadUInt32();
+        var length = br.ReadUInt32();
         directories = new InternalDirectoryEntry[length + 1];
         directories[0] = new(0, 0, "", "");
 
         for (var i = 0u; i < length; i++)
         {
-            var parentId = metaDataReader.ReadUInt32();
-            var name = metaDataReader.ReadString();
+            var parentId = br.ReadUInt32();
+            var name = br.ReadString();
             directories[i + 1] = new(i + 1, parentId, name, FastCdcFsHelper.PathCombine(directories[parentId].FullName, name));
         }
     }

@@ -25,4 +25,19 @@ public class FastCdcFsHelper
             ? null
             : directory.Replace('\\', '/');
     }
+
+    public static int Read(Stream s, byte[] buffer, int offset, int count)
+    {
+        var total = 0;
+
+        while (count > 0)
+        {
+            var read = s.Read(buffer, offset, count);
+            offset += read;
+            total += read;
+            count -= read;
+        }
+
+        return total;
+    }
 }

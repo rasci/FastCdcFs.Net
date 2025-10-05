@@ -1,4 +1,5 @@
-﻿using System.IO.Hashing;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO.Hashing;
 using System.Security.Cryptography;
 using System.Text;
 using ZstdSharp;
@@ -87,7 +88,6 @@ public class FastCdcFsWriter(Options options)
 
         foreach (var chunk in cdc.GetChunks())
         {
-            //Console.WriteLine($"chunk offset {chunk.Offset} length {chunk.Length} (stream position {ms.Position})");
             var chunkInfo = GetOrCreateChunk(chunk, ms);
             file.ChunkIds.Add(chunkInfo.Id);
         }
@@ -95,7 +95,7 @@ public class FastCdcFsWriter(Options options)
 
     public void Build(string targetPath)
     {
-        using var fs = new FileStream(targetPath, FileMode.OpenOrCreate, options.NoHash ? FileAccess.Write : FileAccess.ReadWrite);
+        using var fs = new FileStream(targetPath, FileMode.OpenOrCreate, FileAccess.Write);
         fs.SetLength(0);
         Build(fs);
     }
@@ -109,29 +109,47 @@ public class FastCdcFsWriter(Options options)
         bw.Write(Version);
         bw.Write((byte)GetModes(options));
 
-        // write metadata
-        using var memoryStream = new MemoryStream();
-        using var compressionStream = new ZstdSharp.CompressionStream(memoryStream, new Compressor(22));
-        using var bwMeta = new BinaryWriter(compressionStream, Encoding.UTF8, true);
-        WriteDirectories(bwMeta);
-        WriteFiles(bwMeta);
-        compressionStream.Flush();
-        var compressedMetaData = memoryStream.ToArray();
-
-        // write length of metadata and metadata
-        if (compressedMetaData.LongLength > uint.MaxValue)
-            throw new InvalidOperationException("Compressed metadata exceeds 4GB and cannot be written as a 4-byte length.");
-        bw.Write((uint)compressedMetaData.LongLength);
-        bw.Write(compressedMetaData);
-
-        WriteChunks(bw);
+        WriteMetaData(bw);
+        WriteBlobs(bw);
 
         Length = s.Position - pos;
     }
 
+    private void WriteMetaData(BinaryWriter bw)
+    {
+        using var memoryStream = new MemoryStream();
+        using var metaStream = options.NoZstd
+            ? (Stream)memoryStream
+            : new CompressionStream(memoryStream, new Compressor(22));
+        using var metaBw = new BinaryWriter(metaStream, Encoding.UTF8, true);
+
+        WriteDirectories(metaBw);
+        WriteFiles(metaBw);
+        WriteChunks(metaBw);
+
+        metaStream.Flush();        
+        var metaData = memoryStream.ToArray();
+        if (metaData.LongLength > uint.MaxValue)
+            throw new FastCdcFsException("Compressed metadata exceeds 4GB and cannot be written as a 4-byte length.");
+
+        bw.Write((uint)metaData.LongLength);
+        bw.Write(metaData);
+
+        if (!options.NoHash)
+        {
+            bw.Write(CreateMetaDataHash(metaData));
+        }
+    }
+
     private void WriteChunks(BinaryWriter bw)
     {
-        HandleChunks(bw);
+        var compressionDict = PrepareChunks(bw);
+
+        if (!options.NoZstd)
+        {
+            bw.Write((uint)compressionDict!.LongLength);
+            bw.Write(compressionDict);
+        }
 
         bw.Write((uint)chunks.LongCount());
 
@@ -149,49 +167,36 @@ public class FastCdcFsWriter(Options options)
                 bw.Write(chunk.XxHash64);
             }
         }
+    }
 
-        if (!options.NoHash)
-        {
-            CreateAndWriteMetaDataHash(bw);
-        }
-
+    private void WriteBlobs(BinaryWriter bw)
+    {
         foreach (var chunk in chunks)
         {
             bw.Write(options.NoZstd ? chunk.Data : chunk.CompressedData!);
         }
     }
 
-    private void CreateAndWriteMetaDataHash(BinaryWriter bw)
+    private static ulong CreateMetaDataHash(byte[] metaData)
     {
-        var data = new byte[bw.BaseStream.Position];
-        bw.BaseStream.Position = 0;
-
-        if (bw.BaseStream.Read(data, 0, data.Length) != data.Length)
-            throw new FastCdcFsException("Unexpected count of bytes read");
-
         var hasher = new XxHash64();
-        hasher.Append(data);
+        hasher.Append(metaData);
         var hash = hasher.GetCurrentHashAsUInt64();
-        bw.Write(hash);
+        return hash;
     }
 
-    private void HandleChunks(BinaryWriter bw)
+    private byte[]? PrepareChunks(BinaryWriter bw)
     {
-        byte[] dict = [];
+        var compressionDict = options.NoZstd
+            ? null
+            : DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
 
-        if (!options.NoZstd)
-        {
-            dict = DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
-            bw.Write((uint)dict.LongLength);
-            bw.Write(dict);
-        }
-            
         Parallel.ForEach(chunks, c =>
         {
             if (!options.NoZstd)
             {
                 using var compressor = new Compressor(22);
-                compressor.LoadDictionary(dict);
+                compressor.LoadDictionary(compressionDict);
 
                 using var ms = new MemoryStream();
                 using (var cs = new CompressionStream(ms, compressor))
@@ -216,6 +221,8 @@ public class FastCdcFsWriter(Options options)
         {
             CompressionRatePercentage = options.NoZstd ? 0 : (int)(100 - (double)chunks.Sum(c => c.CompressedData!.Length) / chunks.Sum(c => c.Data.Length) * 100);
         }
+
+        return compressionDict;
     }
 
     private void WriteFiles(BinaryWriter bw)

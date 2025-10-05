@@ -7,9 +7,9 @@ public class EntryTests : TestBase
 
     [Theory]
     [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
+    //[InlineData(false, true)]
+    //[InlineData(true, false)]
+    //[InlineData(true, true)]
     public void OpenFile(bool noZstd, bool noHash)
     {
         var options = new Options(

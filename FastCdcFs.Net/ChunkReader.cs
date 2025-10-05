@@ -17,11 +17,11 @@ internal class ChunkReader(Stream s, bool compressed, bool hashed, byte[]? compr
             decompressor.LoadDictionary(compressionDict);
 
             using var ds = new DecompressionStream(s, decompressor);
-            Read(ds, buffer, offset, (int)chunkInfo.Length);
+            FastCdcFsHelper.Read(ds, buffer, offset, (int)chunkInfo.Length);
         }
         else
         {
-            Read(s, buffer, offset, (int)chunkInfo.Length);
+            FastCdcFsHelper.Read(s, buffer, offset, (int)chunkInfo.Length);
         }
 
         if (hashed && !verifiedChunks.Contains(chunkIndex))
@@ -40,20 +40,5 @@ internal class ChunkReader(Stream s, bool compressed, bool hashed, byte[]? compr
         var hash = hasher.GetCurrentHashAsUInt64();
         if (hash != expectedHash)
             throw new CorruptedDataException();
-    }
-
-    private static int Read(Stream s, byte[] buffer, int offset, int count)
-    {
-        var total = 0;
-
-        while (count > 0)
-        {
-            var read = s.Read(buffer, offset, count);
-            offset += read;
-            total += read;
-            count -= read;
-        }
-
-        return total;
     }
 }
