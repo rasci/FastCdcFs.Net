@@ -74,9 +74,9 @@ var stream = entry!.Open();
 | [0x00..0x08]      magic: utf8 "FASTCDCFS"         | identifies file
 | [0x09..0x09]      version: byte                   | identifies the file system version
 | [0x0A..0x0A]      mode: byte                      | identifies the file system modes
-| [0x0A..0x0A]      meta data length: u32           | length of metadata
-| [0x0B..0x0C]  -   directory count: u32            | number of directories
-| [0x0D..]     |C|  directory table: <repeated>
+| [0x0B..0x0C]      meta data length: u32           | length of metadata
+| [0x0D..0x0E]  -   directory count: u32            | number of directories
+| [0x0F..]     |C|  directory table: <repeated>
 | [..]         |O|    parent id: u32                | parent id of directory
 | [..]         |M|    name: utf8                    | name of directory
 | [..]         |P|  files count: u32                | number of files
