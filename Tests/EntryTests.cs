@@ -7,17 +7,14 @@ public class EntryTests : TestBase
 
     [Theory]
     [InlineData(false, false)]
-    //[InlineData(false, true)]
-    //[InlineData(true, false)]
-    //[InlineData(true, true)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
     public void OpenFile(bool noZstd, bool noHash)
     {
-        var options = new Options(
-            FastCdcFsOptions.Default.FastCdcMinSize,
-            FastCdcFsOptions.Default.FastCdcAverageSize,
-            FastCdcFsOptions.Default.FastCdcMaxSize,
-            noZstd,
-            noHash);
+        var options = FastCdcFsOptions.Default
+            .WithNoZstd(noZstd)
+            .WithNoHash(noHash);
 
         using var reader = CreateReaderWith(options, DefaultFiles);
 
@@ -40,12 +37,9 @@ public class EntryTests : TestBase
     [InlineData(true, true)]
     public void ReadAllBytes(bool noZstd, bool noHash)
     {
-        var options = new Options(
-            FastCdcFsOptions.Default.FastCdcMinSize,
-            FastCdcFsOptions.Default.FastCdcAverageSize,
-            FastCdcFsOptions.Default.FastCdcMaxSize,
-            noZstd,
-            noHash);
+        var options = FastCdcFsOptions.Default
+            .WithNoZstd(noZstd)
+            .WithNoHash(noHash);
 
         using var reader = CreateReaderWith(options, DefaultFiles);
 
