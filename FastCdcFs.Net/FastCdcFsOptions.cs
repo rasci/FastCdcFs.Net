@@ -1,4 +1,6 @@
-﻿namespace FastCdcFs.Net;
+﻿using System.Text;
+
+namespace FastCdcFs.Net;
 
 public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdcMaxSize, bool NoZstd, bool NoHash, int CompressionLevel)
 {
@@ -30,5 +32,22 @@ public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uin
     }
 
     public override string ToString()
-        => $"FastCdcMinSize {FastCdcMinSize}, FastCdcAverageSize {FastCdcAverageSize}, FastCdcMaxSize {FastCdcMaxSize}";
+    {
+        var sb = new StringBuilder();
+
+        var properties = typeof(FastCdcFsOptions).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        foreach (var p in properties)
+        {
+            if (sb.Length > 0)
+            {
+                sb.Append(", ");
+            }
+
+            sb.Append(p.Name);
+            sb.Append(": ");
+            sb.Append(p.GetValue(this));
+        }
+
+        return sb.ToString();
+    }
 }
