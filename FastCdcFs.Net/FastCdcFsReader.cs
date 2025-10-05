@@ -98,7 +98,7 @@ public class FastCdcFsReader : IDisposable
 
         if (hashed)
         {
-            VerifyMetaHash(metaData);
+            ReadAndVerifyMetaHash(metaData);
         }
 
         using var memoryStream = new MemoryStream(metaData);
@@ -205,7 +205,7 @@ public class FastCdcFsReader : IDisposable
         }
     }
 
-    private void VerifyMetaHash(byte[] metaData)
+    private void ReadAndVerifyMetaHash(byte[] metaData)
     {
         var hasher = new XxHash64();
         hasher.Append(metaData);
