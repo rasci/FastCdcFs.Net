@@ -54,11 +54,16 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
 
     public void AddFile(byte[] data, string targetPath)
     {
+        var file = CreateFile(targetPath, (uint)data.Length);
+
+        if (data.Length == 0)
+        {
+            return;
+        }
+
         var cdc = new FastCdc(data, options.FastCdcMinSize, options.FastCdcAverageSize, options.FastCdcMaxSize);
 
         using var ms = new MemoryStream(data);
-
-        var file = CreateFile(targetPath, (uint)ms.Length);
 
         foreach (var chunk in cdc.GetChunks())
         {
@@ -121,8 +126,15 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
 
         if (!options.NoZstd)
         {
-            bw.Write((uint)compressionDict!.LongLength);
-            bw.Write(compressionDict);
+            if (compressionDict != null)
+            {
+                bw.Write((uint)compressionDict.LongLength);
+                bw.Write(compressionDict);
+            }
+            else
+            {
+                bw.Write(0u);
+            }
         }
 
         bw.Write((uint)chunks.LongCount());
@@ -161,9 +173,19 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
 
     private byte[]? PrepareChunks(BinaryWriter bw)
     {
-        var compressionDict = options.NoZstd
-            ? null
-            : DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
+        byte[]? compressionDict = null;
+        if (!options.NoZstd && chunks.Count > 0)
+        {
+            try
+            {
+                compressionDict = DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
+            }
+            catch
+            {
+                // Dictionary training can fail with insufficient data, fall back to no dictionary
+                compressionDict = null;
+            }
+        }
 
         Parallel.ForEach(chunks, c =>
         {
@@ -191,7 +213,7 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
             }
         });
 
-        if (!options.NoZstd)
+        if (!options.NoZstd && chunks.Count > 0)
         {
             CompressionRatePercentage = options.NoZstd ? 0 : (int)(100 - (double)chunks.Sum(c => c.CompressedData!.Length) / chunks.Sum(c => c.Data.Length) * 100);
         }
