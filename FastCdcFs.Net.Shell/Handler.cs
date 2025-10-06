@@ -129,9 +129,9 @@ internal class Handler
 
     private static FastCdcFsOptions CreateOptions(BuildArgs a)
         => new(
-            a.FastCdcMin ?? FastCdcFsOptions.Default.FastCdcMinSize,
-            a.FastCdcAvg ?? FastCdcFsOptions.Default.FastCdcAverageSize,
-            a.FastCdcMax ?? FastCdcFsOptions.Default.FastCdcMaxSize,
+            a.FastCdcMin,
+            a.FastCdcAvg,
+            a.FastCdcMax,
             a.NoZstd,
             a.NoHash,
             a.CompressionLevel);

@@ -5,8 +5,11 @@ namespace FastCdcFs.Net;
 public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdcMaxSize, bool NoZstd, bool NoHash, int CompressionLevel)
 {
     public const int DefaultCompressionLevel = 22;
+    public const uint DefaultFastCdcMinSize = 1024 * 32;
+    public const uint DefaultFastCdcAverageSize = 1024 * 64;
+    public const uint DefaultFastCdcMaxSize = 1024 * 256;
 
-    public static FastCdcFsOptions Default => new(1024 * 32, 1024 * 64, 1024 * 256, false, false, DefaultCompressionLevel);
+    public static FastCdcFsOptions Default => new(DefaultFastCdcMinSize, DefaultFastCdcAverageSize, DefaultFastCdcMaxSize, false, false, DefaultCompressionLevel);
 
     public FastCdcFsOptions WithNoZstd(bool noZstd = true)
         => this with { NoZstd = noZstd };
