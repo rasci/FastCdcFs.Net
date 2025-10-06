@@ -7,14 +7,13 @@
 	<AssemblyName>FastCdcFs.Net</AssemblyName>
 	<RootNamespace>FastCdcFs.Net</RootNamespace>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
-  </PropertyGroup>
-
-  <PropertyGroup>
+    <PackageTags>readonly;virtual-filesystem;archive;storage;deduplication;chunking;fastcdc;content-defined-chunking;stream;io</PackageTags>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	<RepositoryUrl>https://github.com/rasci/FastCdcFs.Net</RepositoryUrl>
 	<RepositoryType>git</RepositoryType>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	<PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

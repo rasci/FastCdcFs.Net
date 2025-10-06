@@ -12,6 +12,8 @@
 	<PackageReadmeFile>README.md</PackageReadmeFile>
 	<RepositoryUrl>https://github.com/rasci/FastCdcFs.Net</RepositoryUrl>
 	<RepositoryType>git</RepositoryType>
+	<PackageTags>readonly;virtual-filesystem;archive;storage;deduplication;chunking;fastcdc;content-defined-chunking;stream;io</PackageTags>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
