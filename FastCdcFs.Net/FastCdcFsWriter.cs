@@ -11,6 +11,14 @@ internal record DirectoryInfo(uint Id, uint ParentId, string Name);
 internal record FileInfo(uint Id, uint DirectoryId, string Name, uint Length)
 {
     public List<uint> ChunkIds { get; } = [];
+    public uint? SolidBlockId { get; set; }
+    public uint SolidBlockOffset { get; set; }
+}
+
+internal record SolidBlock(uint Id)
+{
+    public List<uint> ChunkIds { get; } = [];
+    public MemoryStream Data { get; } = new();
 }
 
 
@@ -23,7 +31,7 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
     {
     }
 
-    public const byte Version = 1;
+    public const byte Version = 2;
 
     private record ChunkInfo(uint Id, byte[] StrongHash, byte[] Data, uint Offset)
     {
@@ -37,9 +45,11 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
     private readonly Dictionary<string, DirectoryInfo> directories = [];
     private readonly List<FileInfo> files = [];
     private readonly List<ChunkInfo> chunks = [];
+    private readonly List<SolidBlock> solidBlocks = [];
     private readonly DirectoryInfo root = new(0, 0, "");
 
-    private uint nextFileId = 0, nextDirectoryId = 1, nextChunkId = 0;
+    private uint nextFileId = 0, nextDirectoryId = 1, nextChunkId = 0, nextSolidBlockId = 0;
+    private SolidBlock? currentSolidBlock;
 
     internal IReadOnlyCollection<uint> ChunkLengths => chunks.Select(c => (uint)c.Data.Length).ToArray();
 
@@ -61,14 +71,22 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
             return;
         }
 
-        var cdc = new FastCdc(data, options.FastCdcMinSize, options.FastCdcAverageSize, options.FastCdcMaxSize);
-
-        using var ms = new MemoryStream(data);
-
-        foreach (var chunk in cdc.GetChunks())
+        // Check if file is small enough for solid block
+        if (data.Length < options.SmallFileThreshold)
         {
-            var chunkInfo = GetOrCreateChunk(chunk, ms);
-            file.ChunkIds.Add(chunkInfo.Id);
+            AddToSolidBlock(file, data);
+        }
+        else
+        {
+            var cdc = new FastCdc(data, options.FastCdcMinSize, options.FastCdcAverageSize, options.FastCdcMaxSize);
+
+            using var ms = new MemoryStream(data);
+
+            foreach (var chunk in cdc.GetChunks())
+            {
+                var chunkInfo = GetOrCreateChunk(chunk, ms);
+                file.ChunkIds.Add(chunkInfo.Id);
+            }
         }
     }
 
@@ -81,6 +99,13 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
 
     public void Build(Stream s)
     {
+        // Finalize any remaining solid block
+        if (currentSolidBlock is not null)
+        {
+            FinalizeSolidBlock(currentSolidBlock);
+            currentSolidBlock = null;
+        }
+
         var pos = s.Position;
 
         using var bw = new BinaryWriter(s, Encoding.UTF8, true);
@@ -104,6 +129,7 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
 
         WriteDirectories(metaBw);
         WriteFiles(metaBw);
+        WriteSolidBlocks(metaBw);
         WriteChunks(metaBw);
 
         metaStream.Flush();        
@@ -236,11 +262,22 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
         bw.Write(file.DirectoryId);
         bw.Write(file.Name);
         bw.Write(file.Length);
-        bw.Write((uint)file.ChunkIds.LongCount());
 
-        foreach (var chunkId in file.ChunkIds)
+        // Write solid block information (only for non-empty files in solid blocks)
+        if (file.SolidBlockId.HasValue && file.Length > 0)
         {
-            bw.Write(chunkId);
+            bw.Write((uint)0); // 0 chunk count indicates file is in a solid block
+            bw.Write(file.SolidBlockId.Value);
+            bw.Write(file.SolidBlockOffset);
+        }
+        else
+        {
+            bw.Write((uint)file.ChunkIds.LongCount());
+
+            foreach (var chunkId in file.ChunkIds)
+            {
+                bw.Write(chunkId);
+            }
         }
     }
 
@@ -258,6 +295,62 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
     {
         bw.Write(directory.ParentId);
         bw.Write(directory.Name);
+    }
+
+    private void WriteSolidBlocks(BinaryWriter bw)
+    {
+        bw.Write((uint)solidBlocks.LongCount());
+
+        foreach (var block in solidBlocks)
+        {
+            WriteSolidBlock(bw, block);
+        }
+    }
+
+    private void WriteSolidBlock(BinaryWriter bw, SolidBlock block)
+    {
+        bw.Write((uint)block.ChunkIds.LongCount());
+
+        foreach (var chunkId in block.ChunkIds)
+        {
+            bw.Write(chunkId);
+        }
+    }
+
+    private void AddToSolidBlock(FileInfo file, byte[] data)
+    {
+        // Create a new solid block if needed
+        if (currentSolidBlock is null || currentSolidBlock.Data.Length + data.Length > options.SolidBlockSize)
+        {
+            if (currentSolidBlock is not null)
+            {
+                FinalizeSolidBlock(currentSolidBlock);
+            }
+            currentSolidBlock = new SolidBlock(nextSolidBlockId++);
+            solidBlocks.Add(currentSolidBlock);
+        }
+
+        // Record the file's location in the solid block
+        file.SolidBlockId = currentSolidBlock.Id;
+        file.SolidBlockOffset = (uint)currentSolidBlock.Data.Length;
+
+        // Add the file data to the solid block
+        currentSolidBlock.Data.Write(data);
+    }
+
+    private void FinalizeSolidBlock(SolidBlock block)
+    {
+        // Chunk the solid block data
+        var blockData = block.Data.ToArray();
+        var cdc = new FastCdc(blockData, options.FastCdcMinSize, options.FastCdcAverageSize, options.FastCdcMaxSize);
+
+        using var ms = new MemoryStream(blockData);
+
+        foreach (var chunk in cdc.GetChunks())
+        {
+            var chunkInfo = GetOrCreateChunk(chunk, ms);
+            block.ChunkIds.Add(chunkInfo.Id);
+        }
     }
 
     private ChunkInfo GetOrCreateChunk(FastCdc.Chunk chunk, Stream s)
