@@ -134,5 +134,7 @@ internal class Handler
             a.FastCdcMax,
             a.NoZstd,
             a.NoHash,
-            a.CompressionLevel);
+            a.CompressionLevel,
+            a.SmallFileThreshold,
+            a.SolidBlockSize);
 }
