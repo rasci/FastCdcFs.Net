@@ -51,4 +51,33 @@ public class EntryTests : TestBase
             Assert.Equal(expected, actual);
         }
     }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void ZeroByteFile(bool noZstd, bool noHash)
+    {
+        var options = FastCdcFsOptions.Default
+            .WithNoZstd(noZstd)
+            .WithNoHash(noHash);
+
+        var writer = new FastCdcFsWriter(options);
+        var emptyData = Array.Empty<byte>();
+        writer.AddFile(emptyData, "empty.txt");
+
+        using var ms = new MemoryStream();
+        writer.Build(ms);
+        ms.Position = 0;
+
+        using var reader = new FastCdcFsReader(ms);
+        var entry = reader.Get("empty.txt");
+        
+        Assert.True(entry.IsFile);
+        Assert.Equal(0u, entry.Length);
+        
+        var actual = entry.ReadAllBytes();
+        Assert.Empty(actual);
+    }
 }
