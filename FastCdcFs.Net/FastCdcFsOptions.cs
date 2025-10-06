@@ -2,14 +2,16 @@
 
 namespace FastCdcFs.Net;
 
-public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdcMaxSize, bool NoZstd, bool NoHash, int CompressionLevel)
+public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdcMaxSize, bool NoZstd, bool NoHash, int CompressionLevel, uint SmallFileThreshold, uint SolidBlockSize)
 {
     public const int DefaultCompressionLevel = 22;
     public const uint DefaultFastCdcMinSize = 1024 * 32;
     public const uint DefaultFastCdcAverageSize = 1024 * 64;
     public const uint DefaultFastCdcMaxSize = 1024 * 256;
+    public const uint DefaultSmallFileThreshold = 1024 * 1024; // 1 MB
+    public const uint DefaultSolidBlockSize = 16 * 1024 * 1024; // 16 MB
 
-    public static FastCdcFsOptions Default => new(DefaultFastCdcMinSize, DefaultFastCdcAverageSize, DefaultFastCdcMaxSize, false, false, DefaultCompressionLevel);
+    public static FastCdcFsOptions Default => new(DefaultFastCdcMinSize, DefaultFastCdcAverageSize, DefaultFastCdcMaxSize, false, false, DefaultCompressionLevel, DefaultSmallFileThreshold, DefaultSolidBlockSize);
 
     public FastCdcFsOptions WithNoZstd(bool noZstd = true)
         => this with { NoZstd = noZstd };
@@ -32,6 +34,17 @@ public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uin
             throw new ArgumentException("Average size must be less than or equal to max size");
 
         return this with { FastCdcMinSize = minSize, FastCdcAverageSize = averageSize, FastCdcMaxSize = maxSize };
+    }
+
+    public FastCdcFsOptions WithSmallFileHandling(uint threshold, uint blockSize)
+    {
+        if (threshold is 0)
+            throw new ArgumentException("Small file threshold must be greater than zero");
+
+        if (blockSize is 0)
+            throw new ArgumentException("Solid block size must be greater than zero");
+
+        return this with { SmallFileThreshold = threshold, SolidBlockSize = blockSize };
     }
 
     public override string ToString()
