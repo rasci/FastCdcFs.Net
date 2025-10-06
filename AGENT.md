@@ -15,6 +15,7 @@ FastCdcFS.Net is a .NET library for creating read-only file systems backed by fa
 ## Build Requirements
 
 - .NET SDK 8.0 or higher (projects target net8.0 and net10.0)
+- Install the .NET 10.0 rc1 or newer SDK to work with the project
 - Linux, macOS, or Windows (cross-platform support)
 
 **Note**: The `FastCdcFs.Net.Client` project is a Windows-only WPF GUI client. Agents typically do not need to build or work on this project, and it can be safely ignored on non-Windows platforms.
