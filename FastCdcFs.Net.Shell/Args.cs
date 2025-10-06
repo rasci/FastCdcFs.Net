@@ -50,6 +50,12 @@ public class BuildArgs : BaseArgs
 
     [Option("fastcdc-max", Required = false, Default = FastCdcFsOptions.DefaultFastCdcMaxSize, HelpText = "Maximum chunk size for FastCDC algorithm")]
     public uint FastCdcMax { get; set; }
+
+    [Option("small-file-threshold", Required = false, Default = FastCdcFsOptions.DefaultSmallFileThreshold, HelpText = "Threshold for small file handling")]
+    public uint SmallFileThreshold { get; set; }
+
+    [Option("solid-block-size", Required = false, Default = FastCdcFsOptions.DefaultSolidBlockSize, HelpText = "Size of solid blocks for small files")]
+    public uint SolidBlockSize { get; set; }
 }
 
 [Verb("list")]
