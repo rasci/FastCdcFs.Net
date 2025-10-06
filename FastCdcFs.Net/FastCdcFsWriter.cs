@@ -173,9 +173,19 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
 
     private byte[]? PrepareChunks(BinaryWriter bw)
     {
-        var compressionDict = options.NoZstd || chunks.Count == 0
-            ? null
-            : DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
+        byte[]? compressionDict = null;
+        if (!options.NoZstd && chunks.Count > 0)
+        {
+            try
+            {
+                compressionDict = DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
+            }
+            catch
+            {
+                // Dictionary training can fail with insufficient data, fall back to no dictionary
+                compressionDict = null;
+            }
+        }
 
         Parallel.ForEach(chunks, c =>
         {
