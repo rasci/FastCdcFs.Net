@@ -10,6 +10,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
+	<RepositoryUrl>https://github.com/rasci/FastCdcFs.Net</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
