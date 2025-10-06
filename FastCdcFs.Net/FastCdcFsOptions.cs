@@ -41,8 +41,8 @@ public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uin
         if (threshold is 0)
             throw new ArgumentException("Small file threshold must be greater than zero");
 
-        if (blockSize < threshold)
-            throw new ArgumentException("Solid block size must be greater than or equal to small file threshold");
+        if (blockSize is 0)
+            throw new ArgumentException("Solid block size must be greater than zero");
 
         return this with { SmallFileThreshold = threshold, SolidBlockSize = blockSize };
     }
