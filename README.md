@@ -8,7 +8,11 @@ A .NET library for creating read-only virtual file systems backed by fast conten
 
 #### Create the file system with shell / terminal
 
-Use FastCdcFs.Shell create file systems:
+Use FastCdcFs.Shell to a create virtual file-system:
+
+```bash
+fastcdcfs build -d "/directory/to/add" -o myfs.fastcdcfs
+```
 
 ```bash
 fastcdcfs build -f "/file/to/add"
@@ -17,6 +21,7 @@ fastcdcfs build -d "/directory/to/add"
 fastcdcfs build -d "/another/directory/to/add" --target "another/non/root/destination" --recursive
 fastcdcfs build -o myfs.fastcdcfs
 ```
+
 #### Create the file system programmatically
 
 ```csharp
