@@ -41,6 +41,15 @@ public class BuildArgs : BaseArgs
 
     [Option("compression-level", Required = false, Default = FastCdcFsOptions.DefaultCompressionLevel, HelpText = "Zstd compression level")]
     public int CompressionLevel { get; set; }
+
+    [Option("fastcdc-min", Required = false, HelpText = "Minimum chunk size for FastCDC algorithm (default: 32768)")]
+    public uint? FastCdcMin { get; set; }
+
+    [Option("fastcdc-avg", Required = false, HelpText = "Average chunk size for FastCDC algorithm (default: 65536)")]
+    public uint? FastCdcAvg { get; set; }
+
+    [Option("fastcdc-max", Required = false, HelpText = "Maximum chunk size for FastCDC algorithm (default: 262144)")]
+    public uint? FastCdcMax { get; set; }
 }
 
 [Verb("list")]
