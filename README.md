@@ -54,13 +54,22 @@ fastcdcfs extract --directory "non/root/destination/file" myfs.fastcdcfs --targe
 ```csharp
 using var reader = new CdcFsReader("myfs.fastcdcfs");
 
-foreach (var file in reader.List())
+foreach (var file in reader.List().Where(e => e.IsFile))
 {
     // read all bytes
     var data = file.ReadAllBytes();
 
     // get stream
     var stream = file.OpenRead();
+}
+```
+
+```csharp
+using var reader = new CdcFsReader("myfs.fastcdcfs");
+
+foreach (var file in reader.List("a/known/directory"))
+{
+    // ...
 }
 ```
 
