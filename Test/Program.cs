@@ -1,26 +1,23 @@
 ﻿using FastCdcFs.Net;
 
-var cdcfsfs = @"d:\work\bcr\firmware-images-smartbox-new-header-cache.fastcdcfs";
+var cdcfsfs = @"d:\work\bcr\with-zero-bytes.fastcdcfs";
 var i = 0;
 
-var writer = new FastCdcFsWriter(o => o.WithChunkSizes(32 * 1024, 64 * 1024, 256 * 1024));
+//var writer = new FastCdcFsWriter(o => o.WithChunkSizes(32 * 1024, 64 * 1024, 256 * 1024));
 
-foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
-{
-    Console.WriteLine($"adding {file}");
-    writer.AddFile(file, Path.GetFileName(file));
+//foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
+//{
+//    Console.WriteLine($"adding {file}");
+//    writer.AddFile(file, Path.GetFileName(file));
 
-    i++;
-    if (i == 2)
-        break;
-}
+//    i++;
+//    if (i == 2)
+//        break;
+//}
 
-using var mems = new MemoryStream();
-writer.Build(mems);
-mems.Position = 0;
-using var reader = new FastCdcFsReader(mems);
+using var reader = new FastCdcFsReader(cdcfsfs);
 
-foreach (var entry in reader.List())
+foreach (var entry in reader.List().Where(e => e.IsFile))
 {
     Console.WriteLine($"read {entry.Name}");
 

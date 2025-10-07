@@ -24,6 +24,29 @@ public abstract class BaseArgs
     public bool IsDirectory => !string.IsNullOrEmpty(Directory);
 }
 
+[Verb("tune")]
+public class TuneArgs : BaseArgs
+{
+
+    [Option("min-min", Required = false, Default = FastCdc.MinimumMin, HelpText = "FastCdc min min")]
+    public uint MinMin { get; set; }
+
+    [Option("min-max", Required = false, Default = FastCdcFsOptions.DefaultFastCdcMinSize, HelpText = "FastCdc min max")]
+    public uint MinMax { get; set; }
+
+    [Option("avg-min", Required = false, Default = FastCdc.MinimumMin, HelpText = "FastCdc average min")]
+    public uint AvgMin { get; set; }
+
+    [Option("avg-max", Required = false, Default = FastCdcFsOptions.DefaultFastCdcAverageSize, HelpText = "FastCdc average max")]
+    public uint AvgMax { get; set; }
+
+    [Option("max-min", Required = false, Default = FastCdc.MinimumMin, HelpText = "FastCdc max min")]
+    public uint MaxMin { get; set; }
+
+    [Option("max-max", Required = false, Default = FastCdcFsOptions.DefaultFastCdcMaxSize, HelpText = "FastCdc max max")]
+    public uint MaxMax { get; set; }
+}
+
 [Verb("build")]
 public class BuildArgs : BaseArgs
 {
