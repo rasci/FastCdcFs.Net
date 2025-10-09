@@ -3,7 +3,7 @@
 internal class Handler
 {
 
-    public static void HandleBuild(BuildArgs a)
+    public static Task HandleBuildAsync(BuildArgs a)
     {
         if (a.IsFile)
         {
@@ -61,9 +61,11 @@ internal class Handler
 
             Console.WriteLine($"(length {writer.Length}, compression rate {writer.CompressionRatePercentage}%)");
         }
+
+        return Task.CompletedTask;
     }
 
-    public static void HandleList(ListArgs a)
+    public static Task HandleListAsync(ListArgs a)
     {
         using var reader = new FastCdcFsReader(a.Source!);
         var entries = reader.List(a.Directory ?? "/");
@@ -82,9 +84,10 @@ internal class Handler
         }
 
         Console.WriteLine(grid);
+        return Task.CompletedTask;
     }
 
-    public static void HandleExtract(ExtractArgs a)
+    public static Task HandleExtractAsync(ExtractArgs a)
     {
         using var reader = new FastCdcFsReader(a.Source!);
 
@@ -99,6 +102,8 @@ internal class Handler
         {
             ExtractDirectory(reader, a.Directory ?? "/", a.TargetPath ?? "", a.Recursive);
         }
+
+        return Task.CompletedTask;
     }
 
     private static void ExtractDirectory(FastCdcFsReader reader, string sourceDir, string targetDir, bool recursive)

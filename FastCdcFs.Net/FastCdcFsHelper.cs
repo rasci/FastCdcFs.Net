@@ -1,6 +1,9 @@
-﻿namespace FastCdcFs.Net;
+﻿using System.Text;
+using static FastCdcFs.Net.FastCdcFsReader;
 
-public class FastCdcFsHelper
+namespace FastCdcFs.Net;
+
+internal class FastCdcFsHelper
 {
 
     public static string Normalize(string? path)
@@ -39,5 +42,90 @@ public class FastCdcFsHelper
         }
 
         return total;
+    }
+
+    public static string Dump(FastCdcFsReader reader)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine($"Version {reader.Version}");
+        sb.AppendLine();
+
+        sb.AppendLine("Directories:");
+        DumpDirectories(sb, reader.Directories);
+        sb.AppendLine();
+
+        sb.AppendLine("Files:");
+        DumpFiles(sb, reader.Files);
+        sb.AppendLine();
+
+        sb.AppendLine("Solid Blocks:");
+        DumpSolidBlocks(sb, reader.SolidBlocks);
+        sb.AppendLine();
+
+        sb.AppendLine("Chunks:");
+        DumpChunks(sb, reader.Chunks);
+        sb.AppendLine();
+
+        return sb.ToString();
+    }
+
+    private static void DumpChunks(StringBuilder sb, IReadOnlyCollection<ChunkInfo> chunks)
+    {
+        var grid = new ConsoleGrid(4);
+
+        grid.Add("Id", "Offset", "Length", "Hash");
+
+        var id = 0;
+        foreach (var chunk in chunks)
+        {
+            grid.Add(id, chunk.Offset, chunk.Length, chunk.Hash is not 0 ? chunk.Hash.ToString() : null);
+            id++;
+        }
+
+        sb.AppendLine(grid.ToString());
+    }
+
+    private static void DumpSolidBlocks(StringBuilder sb, IReadOnlyCollection<InternalSolidBlock> blocks)
+    {
+        var grid = new ConsoleGrid(3);
+
+        grid.Add("Id", "Chunks", "");
+
+        foreach (var block in blocks)
+        {
+            grid.Add(block.Id, block.ChunkIds.Length, string.Join(',', block.ChunkIds));
+        }
+
+        sb.AppendLine(grid.ToString());
+    }
+
+    private static void DumpFiles(StringBuilder sb, IReadOnlyDictionary<string, (uint Length, uint[] ChunkIds, uint? SolidBlockId, uint SolidBlockOffset)> files)
+    {
+        var grid = new ConsoleGrid(4);
+
+        grid.Add("Name", "Directory", "Length", "SolidBlockId");
+
+        foreach (var name in files.Keys)
+        {
+            var entry = files[name];
+            grid.Add(Path.GetFileName(name), GetDirectoryName(name), entry.Length, entry.SolidBlockId);
+        }
+
+        sb.AppendLine(grid.ToString());
+    }
+
+    private static void DumpDirectories(StringBuilder sb, IReadOnlyCollection<InternalDirectoryEntry> directories)
+    {
+        var grid = new ConsoleGrid(4);
+
+        grid.Add("Id", "ParentId", "Name", "FullName");
+
+        foreach (var entry in directories)
+        {
+            grid.Add(entry.Id, entry.ParentId, entry.Name, entry.FullName);
+        }
+
+        sb.AppendLine(grid.ToString());
     }
 }

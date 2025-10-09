@@ -36,6 +36,13 @@ public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uin
         return this with { FastCdcMinSize = minSize, FastCdcAverageSize = averageSize, FastCdcMaxSize = maxSize };
     }
 
+    /// <summary>
+    /// Small files are put in a so called solid block
+    /// </summary>
+    /// <param name="threshold">The maximum file size for a small file consideration</param>
+    /// <param name="blockSize">Solid block Size</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     public FastCdcFsOptions WithSmallFileHandling(uint threshold, uint blockSize)
     {
         if (threshold is 0)

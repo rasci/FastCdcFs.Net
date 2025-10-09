@@ -2,6 +2,12 @@
 
 public class FastCdcFsException(string message) : Exception(message);
 
+public class FastCdcFsFileAlreadyExistsException(string targetPath) : FastCdcFsException($"File {targetPath} already exists")
+{
+
+    public string TargetPath => targetPath;
+}
+
 public class InvalidFastCdcFsVersionException(byte actualVersion) : FastCdcFsException($"Invalid FastCdcFs version {actualVersion}")
 {
     public byte ActualVersion => actualVersion;

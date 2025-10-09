@@ -49,8 +49,9 @@ public class Entry
 
 public class FastCdcFsReader : IDisposable
 {
-    private record InternalDirectoryEntry(uint Id, uint ParentId, string Name, string FullName);
-    private record InternalSolidBlock(uint Id, uint[] ChunkIds);
+    internal record InternalDirectoryEntry(uint Id, uint ParentId, string Name, string FullName);
+
+    internal record InternalSolidBlock(uint Id, uint[] ChunkIds);
 
     private readonly Dictionary<string, (uint Length, uint[] ChunkIds, uint? SolidBlockId, uint SolidBlockOffset)> files = [];
     private readonly ChunkReader chunkReader;
@@ -68,6 +69,14 @@ public class FastCdcFsReader : IDisposable
         : this(new FileStream(path, FileMode.Open, FileAccess.Read), false)
     {
     }
+
+    internal IReadOnlyDictionary<string, (uint Length, uint[] ChunkIds, uint? SolidBlockId, uint SolidBlockOffset)> Files => files;
+
+    internal IReadOnlyCollection<InternalDirectoryEntry> Directories => directories;
+
+    internal IReadOnlyCollection<InternalSolidBlock> SolidBlocks => solidBlocks;
+
+    internal IReadOnlyCollection<ChunkInfo> Chunks => chunks;
 
     public FastCdcFsReader(Stream s, bool leaveOpen = true)
     {
@@ -311,15 +320,16 @@ public class FastCdcFsReader : IDisposable
         var directoryId = br.ReadUInt32();
         var name = br.ReadString();
         var length = br.ReadUInt32();
-
         var chunkCount = br.ReadUInt32();
 
-        if (Version >= 2 && chunkCount == 0 && length > 0)
+        if (Version >= 2 && chunkCount is 0 && length > 0)
         {
             // File is in a solid block (Version 2+, non-empty files)
             var solidBlockId = br.ReadUInt32();
             var solidBlockOffset = br.ReadUInt32();
-            files.Add(FastCdcFsHelper.PathCombine(directories[directoryId].FullName, name), (length, Array.Empty<uint>(), solidBlockId, solidBlockOffset));
+
+            var path = FastCdcFsHelper.PathCombine(directories[directoryId].FullName, name);
+            files.Add(path, (length, [], solidBlockId, solidBlockOffset));
         }
         else
         {

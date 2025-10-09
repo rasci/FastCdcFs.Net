@@ -29,6 +29,9 @@
   	<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>FastCdcFs.Net.Shell</_Parameter1>
   	</AssemblyAttribute>
+	  <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+		  <_Parameter1>Test</_Parameter1>
+	  </AssemblyAttribute>
   </ItemGroup>
 
 </Project>

@@ -1,40 +1,44 @@
 ﻿using FastCdcFs.Net;
 
-var cdcfsfs = @"d:\work\bcr\with-zero-bytes.fastcdcfs";
+var source = @"D:\work\bcr\uis";
+var cdcfsfs = @"d:\work\bcr\firmware-images-smartbox.fastcdcfs";
+//var cdcfsfs = @"d:\work\bcr\uis.fastcdcfs";
+var dump = @"d:\work\bcr\dump.txt";
 var i = 0;
 
-//var writer = new FastCdcFsWriter(o => o.WithChunkSizes(32 * 1024, 64 * 1024, 256 * 1024));
+//var writer = new FastCdcFsWriter(o => o
+//    //.WithChunkSizes(1024, 32 * 1024, 128 * 1024)
+//    .WithSmallFileHandling(1000 * 1024, 64 * 1000 * 1024));
 
-//foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
-//{
-//    Console.WriteLine($"adding {file}");
-//    writer.AddFile(file, Path.GetFileName(file));
+//writer.AddDirectory(source);
 
-//    i++;
-//    if (i == 2)
-//        break;
-//}
+//writer.Build(cdcfsfs);
+
+
+//2269 chunks
 
 using var reader = new FastCdcFsReader(cdcfsfs);
 
-foreach (var entry in reader.List().Where(e => e.IsFile))
-{
-    Console.WriteLine($"read {entry.Name}");
+await File.WriteAllTextAsync(dump, FastCdcFsHelper.Dump(reader));
 
-    using var ms = new MemoryStream();
-    using var stream = entry.Open();
-    stream.CopyTo(ms);
-    var data = ms.ToArray();
+//foreach (var entry in reader.List().Where(e => e.IsFile))
+//{
+//    Console.WriteLine($"read {entry.Name}");
 
-    var sourcePath = Path.Combine(@"D:\work\bcr\current-dlbs", entry.Name);
-    var sourceData = File.ReadAllBytes(sourcePath);
+//    using var ms = new MemoryStream();
+//    using var stream = entry.Open();
+//    stream.CopyTo(ms);
+//    var data = ms.ToArray();
 
-    for (i = 0; i < sourceData.Length; i++)
-    {
-        if (data[i] != sourceData[i])
-        {
-            Console.WriteLine(string.Join("", data.Skip(i)));
-            throw new Exception("data mismatch");
-        }
-    }       
-}
+//    var sourcePath = Path.Combine(source, entry.Name);
+//    var sourceData = File.ReadAllBytes(sourcePath);
+
+//    for (i = 0; i < sourceData.Length; i++)
+//    {
+//        if (data[i] != sourceData[i])
+//        {
+//            Console.WriteLine(string.Join("", data.Skip(i)));
+//            throw new Exception("data mismatch");
+//        }
+//    }       
+//}

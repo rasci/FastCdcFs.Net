@@ -27,24 +27,29 @@ public abstract class BaseArgs
 [Verb("tune")]
 public class TuneArgs : BaseArgs
 {
+    [Option("min", Required = false, Default = FastCdc.MinimumMin, HelpText = "FastCdc min size to begin with")]
+    public uint Min { get; set; }
 
-    [Option("min-min", Required = false, Default = FastCdc.MinimumMin, HelpText = "FastCdc min min")]
-    public uint MinMin { get; set; }
+    [Option("max", Required = false, Default = FastCdc.MaximumMax, HelpText = "FastCdc max size to end with")]
+    public uint Max { get; set; }
 
-    [Option("min-max", Required = false, Default = FastCdcFsOptions.DefaultFastCdcMinSize, HelpText = "FastCdc min max")]
-    public uint MinMax { get; set; }
+    [Option("concurrency", Required = false, Default = 0, HelpText = "The number of concurrent tasks (0 is Environment.ProcessorCount)")]
+    public int Concurrency { get; set; }
 
-    [Option("avg-min", Required = false, Default = FastCdc.MinimumMin, HelpText = "FastCdc average min")]
-    public uint AvgMin { get; set; }
+    internal void Validate()
+    {
+        if (string.IsNullOrEmpty(Directory) || !System.IO.Directory.Exists(Directory))
+            throw new DirectoryNotFoundException(Directory);
 
-    [Option("avg-max", Required = false, Default = FastCdcFsOptions.DefaultFastCdcAverageSize, HelpText = "FastCdc average max")]
-    public uint AvgMax { get; set; }
+        if (Min < FastCdc.MinimumMin)
+            throw new Exception($"Min < {FastCdc.MinimumMin}");
 
-    [Option("max-min", Required = false, Default = FastCdc.MinimumMin, HelpText = "FastCdc max min")]
-    public uint MaxMin { get; set; }
+        if (Max > FastCdc.MaximumMax)
+            throw new Exception($"Max < {FastCdc.MaximumMax}");
 
-    [Option("max-max", Required = false, Default = FastCdcFsOptions.DefaultFastCdcMaxSize, HelpText = "FastCdc max max")]
-    public uint MaxMax { get; set; }
+        if (Concurrency < 0)
+            throw new Exception("Concurrency cannot be negative");
+    }
 }
 
 [Verb("build")]
