@@ -231,19 +231,7 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
 
     private byte[]? PrepareChunks(BinaryWriter bw)
     {
-        byte[]? compressionDict = null;
-        if (!options.NoZstd && chunks.Count > 0)
-        {
-            try
-            {
-                compressionDict = DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
-            }
-            catch
-            {
-                // Dictionary training can fail with insufficient data, fall back to no dictionary
-                compressionDict = null;
-            }
-        }
+        var compressionDict = GetCompressionDict();
 
         Parallel.ForEach(chunks, c =>
         {
@@ -277,6 +265,23 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
         }
 
         return compressionDict;
+    }
+
+    private byte[]? GetCompressionDict()
+    {
+        if (!options.NoZstd && chunks.Count > 0)
+        {
+            try
+            {
+                return DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 1024 * 1024);
+            }
+            catch
+            {
+                // Dictionary training can fail with insufficient data, fall back to no dictionary
+            }
+        }
+
+        return null;
     }
 
     private void WriteFiles(BinaryWriter bw)
