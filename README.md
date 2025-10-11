@@ -85,7 +85,7 @@ var stream = entry!.Open();
 
 ### Version 2 (Current)
 
-Version 2 adds support for small file handling through solid blocks, which combine multiple small files into larger blocks before chunking. This significantly improves storage efficiency for many small files.
+ - Improved zero file size handling
 
 ```
 +--------------------------------------------------------------------------------------+
@@ -102,7 +102,7 @@ Version 2 adds support for small file handling through solid blocks, which combi
 | [..]         |E|    directory id: u32             | id of directory
 | [..]         |S|    name: utf8                    | name of file
 | [..]         |S|    length: u32                   | length of file
-| [..]         |E|    chunk count: u32              | number of chunk ids, when length > 0
+| [..]         |E|    chunk count: u32              | number of chunk ids, not available when version > 1 and length = 0
 | [..]         |D|    file chunk table: <repeated>
 | [..]         |*|      chunk id: u32               | chunk id
 | [..]         |.|  compression dict length: u32    | length of compression dict *
@@ -118,21 +118,12 @@ Version 2 adds support for small file handling through solid blocks, which combi
 
 * only available when the mode is not nozstd
 ** only available when the mode is not nohash
-*** only available in version 2+
 ```
 
 - the meta data is only compressed when the mode is not nozstd
 - the utf8 string encoding uses a 7-bit encoded length prefix
 - the id of a directory is the index in the directory table
 - the id of a chunk is the index in the chunk boundary table
-- the id of a solid block is the index in the solid block table
-- files smaller than the threshold are combined into solid blocks
-- chunk count of 0 with length > 0 indicates the file is in a solid block
-- chunk count of 0 with length = 0 indicates an empty file
-
-### Version 1 (Legacy)
-
-Version 1 is the original format without solid block support. The format is the same as Version 2 but without the solid block table and related file metadata.
 
 ### File System Modes
 
