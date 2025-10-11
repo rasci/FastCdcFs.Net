@@ -83,7 +83,7 @@ public class FastCdcFsReader : IDisposable
             throw new InvalidFastCdcFsFileException("Not a FastCdcFs file");
 
         Version = br.ReadByte();
-        if (Version is not 1)
+        if (Version > FastCdcFsWriter.Version)
             throw new InvalidFastCdcFsVersionException(Version);
 
         var mode = (Modes)br.ReadByte();

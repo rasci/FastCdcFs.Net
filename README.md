@@ -86,6 +86,7 @@ var stream = entry!.Open();
 ### Version 2 (Current)
 
  - Improved zero file size handling
+ - Support for no compression dict even with compression
 
 ```
 +--------------------------------------------------------------------------------------+

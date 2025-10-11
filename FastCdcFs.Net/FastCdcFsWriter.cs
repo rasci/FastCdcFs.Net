@@ -24,7 +24,7 @@ public class FastCdcFsWriter(FastCdcFsOptions options, ILogger? logger = null)
     {
     }
 
-    public const byte Version = 1;
+    public const byte Version = 2;
 
     private record ChunkInfo(uint Id, byte[] StrongHash, byte[] Data, uint Offset)
     {
@@ -143,7 +143,7 @@ public class FastCdcFsWriter(FastCdcFsOptions options, ILogger? logger = null)
 
         if (!options.NoZstd)
         {
-            if (compressionDict != null)
+            if (compressionDict is not null)
             {
                 bw.Write((uint)compressionDict.LongLength);
                 bw.Write(compressionDict);
