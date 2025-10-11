@@ -1,6 +1,7 @@
 ﻿using Humanizer;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FastCdcFs.Net.Shell;
 
@@ -8,6 +9,8 @@ internal class TrainHandler(TrainArgs a)
 {
     private abstract record WorkItem
     {
+        public bool Handled { get; set; }
+
         public uint Length { get; set; }
 
         public TimeSpan? Duration { get; set; }
@@ -38,7 +41,7 @@ internal class TrainHandler(TrainArgs a)
     }
 
     private static readonly object sync = new();
-    private readonly ConcurrentQueue<WorkItem> workItems = [];
+    private readonly List<WorkItem> workItems = [];
     private readonly Dictionary<string, byte[]> fileData = [];
 
     public static async Task HandleAsync(TrainArgs a)
@@ -70,7 +73,7 @@ internal class TrainHandler(TrainArgs a)
     {
         var sw = new Stopwatch();
 
-        while (workItems.TryDequeue(out var item))
+        while (TryGetWorkItem(out var item))
         {
             using var ms = new MemoryStream();
             var writer = item.CreateWriter(a);
@@ -91,9 +94,22 @@ internal class TrainHandler(TrainArgs a)
         }
     }
 
+    private bool TryGetWorkItem([NotNullWhen(true)] out WorkItem? item)
+    {
+        lock (sync)
+        {
+            item = workItems.FirstOrDefault(w => !w.Handled);
+            if (item is null)
+                return false;
+
+            item.Handled = true;
+            return true;
+        }
+    }
+
     private void PrintCurrentWorkItemRanking()
     {
-        var finished = workItems.Where(w => w.Length > 0).OrderBy(w => w.Length).ToArray();
+        var finished = workItems.Where(w => w.Handled).OrderBy(w => w.Length).ToArray();
         ConsoleGrid grid;
 
         if (a.Mode is TrainArgs.TrainModes.FastCdc)
@@ -129,8 +145,9 @@ internal class TrainHandler(TrainArgs a)
             }
         }
         else
+        {
             throw new NotImplementedException(a.Mode.ToString());
-
+        }
 
         var str = grid.ToString();
         lock (sync)
@@ -153,7 +170,7 @@ internal class TrainHandler(TrainArgs a)
                     {
                         var item = new FastCdcWorkItem(min, avg, max);
                         Console.WriteLine($"[{workItems.Count}] {item}");
-                        workItems.Enqueue(item);
+                        workItems.Add(item);
                     }
                 }
             }
@@ -164,7 +181,7 @@ internal class TrainHandler(TrainArgs a)
             {
                 var item = new CompressionDictWorkItem(current);
                 Console.WriteLine($"[{workItems.Count}] {item}");
-                workItems.Enqueue(item);
+                workItems.Add(item);
             }
         }
         else

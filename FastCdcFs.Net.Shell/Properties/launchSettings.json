@@ -28,7 +28,7 @@
     },
     "Train FastCdc": {
       "commandName": "Project",
-      "commandLineArgs": "train fastcdc -d d:\\work\\bcr\\current-dlbs"
+      "commandLineArgs": "train fastcdc -d d:\\work\\bcr\\current-dlbs --concurrency 1 --min 32768 --max 262144"
     },
     "Train CompressionDictSize": {
       "commandName": "Project",
