@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.IO.Hashing;
 using System.Text;
 
@@ -51,16 +52,13 @@ public class FastCdcFsReader : IDisposable
 {
     internal record InternalDirectoryEntry(uint Id, uint ParentId, string Name, string FullName);
 
-    internal record InternalSolidBlock(uint Id, uint[] ChunkIds);
-
-    private readonly Dictionary<string, (uint Length, uint[] ChunkIds, uint? SolidBlockId, uint SolidBlockOffset)> files = [];
+    private readonly Dictionary<string, (uint Length, uint[] ChunkIds)> files = [];
     private readonly ChunkReader chunkReader;
     private readonly Stream s;
     private readonly BinaryReader br;
     private readonly bool leaveOpen, compressed, hashed;
 
     private InternalDirectoryEntry[] directories;
-    private InternalSolidBlock[] solidBlocks;
     private byte[]? compressionDict;
     private ChunkInfo[] chunks;
     private int dataOffset;
@@ -70,11 +68,9 @@ public class FastCdcFsReader : IDisposable
     {
     }
 
-    internal IReadOnlyDictionary<string, (uint Length, uint[] ChunkIds, uint? SolidBlockId, uint SolidBlockOffset)> Files => files;
+    internal IReadOnlyDictionary<string, (uint Length, uint[] ChunkIds)> Files => files;
 
     internal IReadOnlyCollection<InternalDirectoryEntry> Directories => directories;
-
-    internal IReadOnlyCollection<InternalSolidBlock> SolidBlocks => solidBlocks;
 
     internal IReadOnlyCollection<ChunkInfo> Chunks => chunks;
 
@@ -88,7 +84,7 @@ public class FastCdcFsReader : IDisposable
             throw new InvalidFastCdcFsFileException("Not a FastCdcFs file");
 
         Version = br.ReadByte();
-        if (Version is not 1 and not 2)
+        if (Version is not 1)
             throw new InvalidFastCdcFsVersionException(Version);
 
         var mode = (Modes)br.ReadByte();
@@ -101,7 +97,7 @@ public class FastCdcFsReader : IDisposable
         chunkReader = new(s, compressed, hashed, compressionDict, dataOffset);
     }
 
-    [MemberNotNull(nameof(directories), nameof(solidBlocks), nameof(chunks))]
+    [MemberNotNull(nameof(directories), nameof(chunks))]
     private void ReadMetaData()
     {
         var metaDataLength = br.ReadUInt32();
@@ -120,17 +116,6 @@ public class FastCdcFsReader : IDisposable
 
         ReadDirectories(metaBr);
         ReadFiles(metaBr);
-        
-        if (Version >= 2)
-        {
-            ReadSolidBlocks(metaBr);
-        }
-        else
-        {
-            // Version 1 had no solid blocks
-            solidBlocks = Array.Empty<InternalSolidBlock>();
-        }
-        
         ReadChunks(metaBr);
     }
 
@@ -171,33 +156,9 @@ public class FastCdcFsReader : IDisposable
     }
 
     internal Stream OpenFile(string path)
-    {
-        if (!files.TryGetValue(path, out var e))
-            throw new FileNotFoundException(path);
-
-        if (e.SolidBlockId.HasValue)
-        {
-            // File is in a solid block - read the whole block and return a stream for the file portion
-            var block = solidBlocks[e.SolidBlockId.Value];
-            var blockData = new byte[block.ChunkIds.Sum(id => (int)chunks[id].Length)];
-            var offset = 0;
-
-            for (var i = 0; i < block.ChunkIds.Length; i++)
-            {
-                var chunkId = block.ChunkIds[i];
-                var chunkInfo = chunks[chunkId];
-                chunkReader.ReadChunk(chunkId, chunkInfo, blockData, offset);
-                offset += (int)chunkInfo.Length;
-            }
-
-            // Return a memory stream for the file portion
-            return new MemoryStream(blockData, (int)e.SolidBlockOffset, (int)e.Length, false);
-        }
-        else
-        {
-            return new FastCdcFsStream(chunkReader, chunks, e.Length, e.ChunkIds);
-        }
-    }
+        => files.TryGetValue(path, out var e)
+            ? new FastCdcFsStream(chunkReader, chunks, e.Length, e.ChunkIds)
+            : throw new FileNotFoundException(path);
 
     internal byte[] ReadFile(string path)
     {
@@ -205,36 +166,14 @@ public class FastCdcFsReader : IDisposable
             throw new FileNotFoundException(path);
 
         var data = new byte[e.Length];
+        var offset = 0;
 
-        if (e.SolidBlockId.HasValue)
+        for (var i = 0; i < e.ChunkIds.Length; i++)
         {
-            // File is in a solid block
-            var block = solidBlocks[e.SolidBlockId.Value];
-            var blockData = new byte[block.ChunkIds.Sum(id => (int)chunks[id].Length)];
-            var offset = 0;
-
-            for (var i = 0; i < block.ChunkIds.Length; i++)
-            {
-                var chunkId = block.ChunkIds[i];
-                var chunkInfo = chunks[chunkId];
-                chunkReader.ReadChunk(chunkId, chunkInfo, blockData, offset);
-                offset += (int)chunkInfo.Length;
-            }
-
-            // Extract the file from the solid block
-            Array.Copy(blockData, e.SolidBlockOffset, data, 0, e.Length);
-        }
-        else
-        {
-            var offset = 0;
-
-            for (var i = 0; i < e.ChunkIds.Length; i++)
-            {
-                var chunkId = e.ChunkIds[i];
-                var chunkInfo = chunks[e.ChunkIds[i]];
-                chunkReader.ReadChunk(chunkId, chunkInfo, data, offset);
-                offset += (int)chunkInfo.Length;
-            }
+            var chunkId = e.ChunkIds[i];
+            var chunkInfo = chunks[e.ChunkIds[i]];
+            chunkReader.ReadChunk(chunkId, chunkInfo, data, offset);
+            offset += (int)chunkInfo.Length;
         }
 
         return data;
@@ -321,27 +260,14 @@ public class FastCdcFsReader : IDisposable
         var name = br.ReadString();
         var length = br.ReadUInt32();
         var chunkCount = br.ReadUInt32();
+        var chunkIds = new uint[chunkCount];
 
-        if (Version >= 2 && chunkCount is 0 && length > 0)
+        for (var i = 0; i < chunkIds.Length; i++)
         {
-            // File is in a solid block (Version 2+, non-empty files)
-            var solidBlockId = br.ReadUInt32();
-            var solidBlockOffset = br.ReadUInt32();
-
-            var path = FastCdcFsHelper.PathCombine(directories[directoryId].FullName, name);
-            files.Add(path, (length, [], solidBlockId, solidBlockOffset));
+            chunkIds[i] = br.ReadUInt32();
         }
-        else
-        {
-            var chunkIds = new uint[chunkCount];
 
-            for (var i = 0; i < chunkIds.Length; i++)
-            {
-                chunkIds[i] = br.ReadUInt32();
-            }
-
-            files.Add(FastCdcFsHelper.PathCombine(directories[directoryId].FullName, name), (length, chunkIds, null, 0));
-        }
+        files.Add(FastCdcFsHelper.PathCombine(directories[directoryId].FullName, name), (length, chunkIds));
     }
 
     [MemberNotNull(nameof(directories))]
@@ -356,26 +282,6 @@ public class FastCdcFsReader : IDisposable
             var parentId = br.ReadUInt32();
             var name = br.ReadString();
             directories[i + 1] = new(i + 1, parentId, name, FastCdcFsHelper.PathCombine(directories[parentId].FullName, name));
-        }
-    }
-
-    [MemberNotNull(nameof(solidBlocks))]
-    private void ReadSolidBlocks(BinaryReader br)
-    {
-        var count = br.ReadUInt32();
-        solidBlocks = new InternalSolidBlock[count];
-
-        for (var i = 0u; i < count; i++)
-        {
-            var chunkCount = br.ReadUInt32();
-            var chunkIds = new uint[chunkCount];
-
-            for (var j = 0; j < chunkCount; j++)
-            {
-                chunkIds[j] = br.ReadUInt32();
-            }
-
-            solidBlocks[i] = new(i, chunkIds);
         }
     }
 }

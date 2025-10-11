@@ -6,7 +6,7 @@
     },
     "List": {
       "commandName": "Project",
-      "commandLineArgs": "list \"D:\\work\\bcr\\firmware-images-smartbox.fastcdcfs\""
+      "commandLineArgs": "list -h \"C:\\ProgramData\\SmartBox\\FirmwareUpdate\\firmware-images-7.44.0-preview010.fastcdcfs\""
     },
     "Extract File": {
       "commandName": "Project",

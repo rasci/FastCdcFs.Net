@@ -59,10 +59,6 @@ internal class FastCdcFsHelper
         DumpFiles(sb, reader.Files);
         sb.AppendLine();
 
-        sb.AppendLine("Solid Blocks:");
-        DumpSolidBlocks(sb, reader.SolidBlocks);
-        sb.AppendLine();
-
         sb.AppendLine("Chunks:");
         DumpChunks(sb, reader.Chunks);
         sb.AppendLine();
@@ -86,21 +82,7 @@ internal class FastCdcFsHelper
         sb.AppendLine(grid.ToString());
     }
 
-    private static void DumpSolidBlocks(StringBuilder sb, IReadOnlyCollection<InternalSolidBlock> blocks)
-    {
-        var grid = new ConsoleGrid(3);
-
-        grid.Add("Id", "Chunks", "");
-
-        foreach (var block in blocks)
-        {
-            grid.Add(block.Id, block.ChunkIds.Length, string.Join(',', block.ChunkIds));
-        }
-
-        sb.AppendLine(grid.ToString());
-    }
-
-    private static void DumpFiles(StringBuilder sb, IReadOnlyDictionary<string, (uint Length, uint[] ChunkIds, uint? SolidBlockId, uint SolidBlockOffset)> files)
+    private static void DumpFiles(StringBuilder sb, IReadOnlyDictionary<string, (uint Length, uint[] ChunkIds)> files)
     {
         var grid = new ConsoleGrid(4);
 
@@ -109,7 +91,7 @@ internal class FastCdcFsHelper
         foreach (var name in files.Keys)
         {
             var entry = files[name];
-            grid.Add(Path.GetFileName(name), GetDirectoryName(name), entry.Length, entry.SolidBlockId);
+            grid.Add(Path.GetFileName(name), GetDirectoryName(name), entry.Length);
         }
 
         sb.AppendLine(grid.ToString());

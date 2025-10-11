@@ -1,18 +1,19 @@
 ﻿using FastCdcFs.Net;
 
+//var source = @"D:\work\bcr\current-dlbs";
 var source = @"D:\work\bcr\uis";
-var cdcfsfs = @"d:\work\bcr\firmware-images-smartbox.fastcdcfs";
-//var cdcfsfs = @"d:\work\bcr\uis.fastcdcfs";
+//var cdcfsfs = @"d:\work\bcr\firmware-images-smartbox2.fastcdcfs";
+var cdcfsfs = @"d:\work\bcr\fss\uis-chunking-112kB-dict-64MB-block.fastcdcfs";
 var dump = @"d:\work\bcr\dump.txt";
 var i = 0;
 
-//var writer = new FastCdcFsWriter(o => o
-//    //.WithChunkSizes(1024, 32 * 1024, 128 * 1024)
-//    .WithSmallFileHandling(1000 * 1024, 64 * 1000 * 1024));
+var writer = new FastCdcFsWriter(o => o
+    //.WithChunkSizes(1024, 32 * 1024, 128 * 1024)
+    .WithSmallFileHandling(1000 * 1024, 2 * 64 * 1000 * 1024));
 
-//writer.AddDirectory(source);
+writer.AddDirectory(source);
 
-//writer.Build(cdcfsfs);
+writer.Build(cdcfsfs);
 
 
 //2269 chunks

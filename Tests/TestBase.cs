@@ -20,31 +20,56 @@ public abstract class TestBase
         => CreateReaderWith(FastCdcFsOptions.Default, DefaultFiles);
 
     protected void CreateDefaultFile(Stream stream)
-        => CreateFile(FastCdcFsOptions.Default, stream, DefaultFiles);
+        => CreateFile(FastCdcFsOptions.Default, stream, CreateRandData, DefaultFiles);
 
     protected FastCdcFsReader CreateReaderWith(FastCdcFsOptions options, params string[] files)
+        => CreateReaderWith(options, CreateRandData, files);
+
+    protected FastCdcFsReader CreateReaderWith(FastCdcFsOptions options, Func<string, byte[]> dataHandler, params string[] files)
     {
         var ms = new MemoryStream();
-        CreateFile(options, ms, files);
+        CreateFile(options, ms, dataHandler, files);
         return new(ms);
     }
 
-    protected void CreateFile(FastCdcFsOptions options, Stream stream, params string[] files)
+    protected void CreateFile(FastCdcFsOptions options, Stream stream, Func<string, byte[]> dataHandler, params string[] files)
     {
         var writer = new FastCdcFsWriter(options);
-        AddRandFiles(writer, files);
+
+        for (var i = 0; i < files.Length; i++)
+        {
+            writer.AddFile(dataHandler(files[i]), files[i]);
+        }
+
         writer.Build(stream);
         stream.Position = 0;
     }
 
-    protected void AddRandFiles(FastCdcFsWriter writer, params string[] paths)
+    protected void AssertFileEntry(Entry? n, byte[] expectedData)
     {
-        foreach (var file in paths)
-        {
-            var data = GenerateRepresentativeJsonData(1024 * 1000);
-            randFileData[file] = data;
-            writer.AddFile(data, file);
-        }
+        Assert.NotNull(n);
+        Assert.True(n.IsFile);
+        Assert.NotNull(n.Name);
+        Assert.Equal(n.Name, n.FullName.Split('/').Last());
+        Assert.Equal((uint)expectedData.Length, n.Length);
+
+        using var s = n.Open();
+        Assert.Equal((uint)expectedData.Length, s.Length);
+
+        var buffer = new Span<byte>(new byte[expectedData.Length + 1]); // need a buffer with length > 0
+        Assert.Equal(
+            expectedData.Length,
+            s.Read(buffer));
+
+        Assert.Equal(expectedData, buffer.Slice(0, expectedData.Length).ToArray());
+        Assert.Equal(expectedData, n.ReadAllBytes());
+    }
+
+    private byte[] CreateRandData(string file)
+    {
+        var data = GenerateRepresentativeJsonData(1024 * 1000);
+        randFileData[file] = data;
+        return data;
     }
 
     private static byte[] GenerateRepresentativeJsonData(int dataSize)
