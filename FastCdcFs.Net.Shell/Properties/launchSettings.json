@@ -6,7 +6,7 @@
     },
     "List": {
       "commandName": "Project",
-      "commandLineArgs": "list \"D:\\work\\bcr\\firmware-images-smartbox.fastcdcfs\""
+      "commandLineArgs": "list -h \"C:\\ProgramData\\SmartBox\\FirmwareUpdate\\firmware-images-7.44.0-preview010.fastcdcfs\""
     },
     "Extract File": {
       "commandName": "Project",
@@ -15,6 +15,20 @@
     "Extract All": {
       "commandName": "Project",
       "commandLineArgs": "extract --target \"d:\\work\\chunkfs\\tmp\" \"d:\\work\\chunkfs\\shell.zstd.cdcfs\""
+    },
+    "Dump": {
+      "commandName": "Project",
+      "commandLineArgs": "dump d:\\work\\bcr\\uis.fastcdcfs"
+    },
+    "Dump 2 File": {
+      "commandName": "Executable",
+      "executablePath": "powershell.exe",
+      "commandLineArgs": "-NoProfile -Command \"dotnet run --project . --framework net10.0 -- dump d:\\work\\bcr\\uis.fastcdcfs *> d:\\work\\bcr\\dump.txt\"",
+      "workingDirectory": "$(ProjectDir)"
+    },
+    "Tune": {
+      "commandName": "Project",
+      "commandLineArgs": "tune -d d:\\work\\bcr\\UIS --max 10240"
     }
   }
 }

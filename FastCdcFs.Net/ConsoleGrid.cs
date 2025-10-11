@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace FastCdcFs.Net.Shell;
+namespace FastCdcFs.Net;
 
 internal class ConsoleGrid(int columns)
 {
@@ -27,7 +27,10 @@ internal class ConsoleGrid(int columns)
                 sb.Append((row[i]?.ToString() ?? "").PadRight(columnWidths[i] + 2));
             }
 
-            sb.AppendLine();
+            if (rows.Last() != row)
+            {
+                sb.AppendLine();
+            }
         }
 
         return sb.ToString();

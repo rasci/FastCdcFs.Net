@@ -1,43 +1,45 @@
 ﻿using FastCdcFs.Net;
 
-var cdcfsfs = @"d:\work\bcr\firmware-images-smartbox-new-header-cache.fastcdcfs";
+//var source = @"D:\work\bcr\current-dlbs";
+var source = @"D:\work\bcr\uis";
+//var cdcfsfs = @"d:\work\bcr\firmware-images-smartbox2.fastcdcfs";
+var cdcfsfs = @"d:\work\bcr\fss\uis-chunking-112kB-dict-64MB-block.fastcdcfs";
+var dump = @"d:\work\bcr\dump.txt";
 var i = 0;
 
-var writer = new FastCdcFsWriter(o => o.WithChunkSizes(32 * 1024, 64 * 1024, 256 * 1024));
+var writer = new FastCdcFsWriter(o => o
+    //.WithChunkSizes(1024, 32 * 1024, 128 * 1024)
+    .WithSmallFileHandling(1000 * 1024, 2 * 64 * 1000 * 1024));
 
-foreach (var file in Directory.GetFiles(@"D:\work\bcr\current-dlbs"))
-{
-    Console.WriteLine($"adding {file}");
-    writer.AddFile(file, Path.GetFileName(file));
+writer.AddDirectory(source);
 
-    i++;
-    if (i == 2)
-        break;
-}
+writer.Build(cdcfsfs);
 
-using var mems = new MemoryStream();
-writer.Build(mems);
-mems.Position = 0;
-using var reader = new FastCdcFsReader(mems);
 
-foreach (var entry in reader.List())
-{
-    Console.WriteLine($"read {entry.Name}");
+//2269 chunks
 
-    using var ms = new MemoryStream();
-    using var stream = entry.Open();
-    stream.CopyTo(ms);
-    var data = ms.ToArray();
+using var reader = new FastCdcFsReader(cdcfsfs);
 
-    var sourcePath = Path.Combine(@"D:\work\bcr\current-dlbs", entry.Name);
-    var sourceData = File.ReadAllBytes(sourcePath);
+await File.WriteAllTextAsync(dump, FastCdcFsHelper.Dump(reader));
 
-    for (i = 0; i < sourceData.Length; i++)
-    {
-        if (data[i] != sourceData[i])
-        {
-            Console.WriteLine(string.Join("", data.Skip(i)));
-            throw new Exception("data mismatch");
-        }
-    }       
-}
+//foreach (var entry in reader.List().Where(e => e.IsFile))
+//{
+//    Console.WriteLine($"read {entry.Name}");
+
+//    using var ms = new MemoryStream();
+//    using var stream = entry.Open();
+//    stream.CopyTo(ms);
+//    var data = ms.ToArray();
+
+//    var sourcePath = Path.Combine(source, entry.Name);
+//    var sourceData = File.ReadAllBytes(sourcePath);
+
+//    for (i = 0; i < sourceData.Length; i++)
+//    {
+//        if (data[i] != sourceData[i])
+//        {
+//            Console.WriteLine(string.Join("", data.Skip(i)));
+//            throw new Exception("data mismatch");
+//        }
+//    }       
+//}

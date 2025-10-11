@@ -16,8 +16,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastCdcFs.Net.Client", "FastCdcFs.Net.Client\FastCdcFs.Net.Client.csproj", "{370E2847-EF5A-4CFE-A1C9-3FCA45CBB765}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{C7FDD9EE-5DB5-40C5-B01C-FB65ED887726}"
 EndProject
 Global
@@ -38,10 +36,6 @@ Global
 		{88CDD1FD-B31D-41B6-958A-0437753A4B07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88CDD1FD-B31D-41B6-958A-0437753A4B07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88CDD1FD-B31D-41B6-958A-0437753A4B07}.Release|Any CPU.Build.0 = Release|Any CPU
-		{370E2847-EF5A-4CFE-A1C9-3FCA45CBB765}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{370E2847-EF5A-4CFE-A1C9-3FCA45CBB765}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{370E2847-EF5A-4CFE-A1C9-3FCA45CBB765}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{370E2847-EF5A-4CFE-A1C9-3FCA45CBB765}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C7FDD9EE-5DB5-40C5-B01C-FB65ED887726}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C7FDD9EE-5DB5-40C5-B01C-FB65ED887726}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7FDD9EE-5DB5-40C5-B01C-FB65ED887726}.Release|Any CPU.ActiveCfg = Release|Any CPU
