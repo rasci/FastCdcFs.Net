@@ -31,21 +31,6 @@ writer.AddFile("/another/file/to/add", "non/root/destination");
 writer.Build("/target/location");
 ```
 
-#### Small file handling
-
-For collections with many small files (e.g., HTML files, configuration files), you can enable solid block optimization:
-
-```csharp
-var options = FastCdcFsOptions.Default
-    .WithSmallFileHandling(threshold: 1024 * 1024, blockSize: 16 * 1024 * 1024);
-
-var writer = new FastCdcFsWriter(options);
-// Add your files...
-writer.Build("/target/location");
-```
-
-This combines files smaller than the threshold (1 MB by default) into larger blocks (16 MB by default) before chunking, significantly improving storage efficiency and deduplication for many small files.
-
 ### Read a file system
 
 #### Read the file system with shell / terminal
