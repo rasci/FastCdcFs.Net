@@ -8,8 +8,7 @@ var dump = @"d:\work\bcr\dump.txt";
 var i = 0;
 
 var writer = new FastCdcFsWriter(o => o
-    //.WithChunkSizes(1024, 32 * 1024, 128 * 1024)
-    .WithSmallFileHandling(1000 * 1024, 2 * 64 * 1000 * 1024));
+    .WithChunkSizes(1024, 32 * 1024, 128 * 1024));
 
 writer.AddDirectory(source);
 

@@ -1,13 +1,19 @@
 ﻿using FastCdcFs.Net.Shell;
 using CommandLine;
 
-await Parser.Default
-    .ParseArguments<BuildArgs, ListArgs, ExtractArgs, DumpArgs, TuneArgs>(args)
+var parser = new Parser(o =>
+{
+    o.HelpWriter = Console.Error;
+    o.CaseInsensitiveEnumValues = true;
+});
+
+await parser
+    .ParseArguments<BuildArgs, ListArgs, ExtractArgs, DumpArgs, TrainArgs>(args)
     .WithParsedAsync<BuildArgs>(Handler.HandleBuildAsync)
     .ContinueWithParsedAsync<ListArgs>(Handler.HandleListAsync)
     .ContinueWithParsedAsync<ExtractArgs>(Handler.HandleExtractAsync)
     .ContinueWithParsedAsync<DumpArgs>(DumpHandler.HandleAsync)
-    .ContinueWithParsedAsync<TuneArgs>(TuneHandler.HandleAsync);
+    .ContinueWithParsedAsync<TrainArgs>(TrainHandler.HandleAsync);
 
 public static class Extensions
 {

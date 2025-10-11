@@ -2,14 +2,15 @@
 
 namespace FastCdcFs.Net;
 
-public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdcMaxSize, bool NoZstd, bool NoHash, int CompressionLevel)
+public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uint FastCdcMaxSize, bool NoZstd, bool NoHash, int CompressionLevel, uint CompressionDictSize)
 {
     public const int DefaultCompressionLevel = 22;
     public const uint DefaultFastCdcMinSize = 1024 * 32;
     public const uint DefaultFastCdcAverageSize = 1024 * 64;
     public const uint DefaultFastCdcMaxSize = 1024 * 256;
+    public const uint CompressionDictMaxSize = 1024 * 1024 * 128; // 128 MB
 
-    public static FastCdcFsOptions Default => new(DefaultFastCdcMinSize, DefaultFastCdcAverageSize, DefaultFastCdcMaxSize, false, false, DefaultCompressionLevel);
+    public static FastCdcFsOptions Default => new(DefaultFastCdcMinSize, DefaultFastCdcAverageSize, DefaultFastCdcMaxSize, false, false, DefaultCompressionLevel, 0);
 
     public FastCdcFsOptions WithNoZstd(bool noZstd = true)
         => this with { NoZstd = noZstd };
@@ -19,6 +20,19 @@ public record FastCdcFsOptions(uint FastCdcMinSize, uint FastCdcAverageSize, uin
 
     public FastCdcFsOptions WithCompressionLevel(int level = 22)
         => this with { CompressionLevel = level };
+
+    /// <summary>
+    /// Specifies the compression dict size
+    /// </summary>
+    /// <param name="size">max 128 MB, if 0, take 100 * average sample data size</param>
+    /// <returns></returns>
+    public FastCdcFsOptions WithCompressionDictSize(uint size = 0)
+    {
+        if (size > CompressionDictMaxSize)
+            throw new FastCdcFsException("Compression dict size cannot be greater than 128MB");
+
+        return this with { CompressionDictSize = size };
+    }
 
     public FastCdcFsOptions WithChunkSizes(uint minSize, uint averageSize, uint maxSize)
     {

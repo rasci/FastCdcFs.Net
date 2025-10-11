@@ -117,18 +117,9 @@ Version 2 adds support for small file handling through solid blocks, which combi
 | [..]         |E|    directory id: u32             | id of directory
 | [..]         |S|    name: utf8                    | name of file
 | [..]         |S|    length: u32                   | length of file
-| [..]         |E|    chunk count: u32              | number of chunk ids (0 for solid)***
-| [..]         |D|    if chunk count > 0:
-| [..]         |.|      file chunk table: <repeated>
-| [..]         |.|        chunk id: u32             | chunk id
-| [..]         |.|    if chunk count == 0 and length > 0:
-| [..]         |.|      solid block id: u32         | solid block id ***
-| [..]         |.|      solid block offset: u32     | offset in solid block ***
-| [..]         |.|  solid block count: u32          | number of solid blocks ***
-| [..]         |.|  solid block table: <repeated> ***
-| [..]         |.|    chunk count: u32              | number of chunk ids
-| [..]         |.|    solid block chunk table: <repeated>
-| [..]         |.|      chunk id: u32               | chunk id
+| [..]         |E|    chunk count: u32              | number of chunk ids, when length > 0
+| [..]         |D|    file chunk table: <repeated>
+| [..]         |*|      chunk id: u32               | chunk id
 | [..]         |.|  compression dict length: u32    | length of compression dict *
 | [..]         |.|  compression dict: raw           | compression dict *
 | [..]         |.|  chunk boundary count: u32       | number of chunk boundaries

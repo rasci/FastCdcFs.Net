@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.IO.Hashing;
 using System.Text;
 
@@ -259,12 +258,22 @@ public class FastCdcFsReader : IDisposable
         var directoryId = br.ReadUInt32();
         var name = br.ReadString();
         var length = br.ReadUInt32();
-        var chunkCount = br.ReadUInt32();
-        var chunkIds = new uint[chunkCount];
 
-        for (var i = 0; i < chunkIds.Length; i++)
+        uint[] chunkIds;
+
+        if (Version is 1 || length is not 0)
         {
-            chunkIds[i] = br.ReadUInt32();
+            var chunkCount = br.ReadUInt32();
+            chunkIds = new uint[chunkCount];
+
+            for (var i = 0; i < chunkIds.Length; i++)
+            {
+                chunkIds[i] = br.ReadUInt32();
+            }
+        }
+        else
+        {
+            chunkIds = [];
         }
 
         files.Add(FastCdcFsHelper.PathCombine(directories[directoryId].FullName, name), (length, chunkIds));

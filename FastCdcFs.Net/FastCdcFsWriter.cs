@@ -1,4 +1,5 @@
-﻿using System.IO.Hashing;
+﻿using Microsoft.Extensions.Logging;
+using System.IO.Hashing;
 using System.Security.Cryptography;
 using System.Text;
 using ZstdSharp;
@@ -15,11 +16,11 @@ internal record FileInfo(uint Id, uint DirectoryId, string Name, uint Length)
         => $"[{Id}] {Name} (DirId: {DirectoryId}, Length: {Length}, Chunks: {string.Join(',', ChunkIds)}";
 }
 
-public class FastCdcFsWriter(FastCdcFsOptions options)
+public class FastCdcFsWriter(FastCdcFsOptions options, ILogger? logger = null)
 {
 
-    public FastCdcFsWriter(Func<FastCdcFsOptions, FastCdcFsOptions>? configure = null)
-        : this(configure?.Invoke(FastCdcFsOptions.Default) ?? FastCdcFsOptions.Default)
+    public FastCdcFsWriter(Func<FastCdcFsOptions, FastCdcFsOptions>? configure = null, ILogger? logger = null)
+        : this(configure?.Invoke(FastCdcFsOptions.Default) ?? FastCdcFsOptions.Default, logger)
     {
     }
 
@@ -85,7 +86,7 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
             }
         }
 
-        Console.WriteLine($"Added {file}");
+        logger?.LogInformation("Added {File}", file);
     }
 
     public void Build(string targetPath)
@@ -231,11 +232,15 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
         {
             try
             {
-                return DictBuilder.TrainFromBuffer(chunks.Select(c => c.Data), 112 * 1024);
+                return DictBuilder.TrainFromBuffer(
+                    chunks.Select(c => c.Data),
+                    options.CompressionDictSize is 0
+                        ? (int)(100 * chunks.Average(c => c.Data.Length))
+                        : (int)options.CompressionDictSize);
             }
             catch
             {
-                // Dictionary training can fail with insufficient data, fall back to no dictionary
+                Console.Error.WriteLine("Warning: Dictionary training failed, proceeding without dictionary.");
             }
         }
 
@@ -257,6 +262,10 @@ public class FastCdcFsWriter(FastCdcFsOptions options)
         bw.Write(file.DirectoryId);
         bw.Write(file.Name);
         bw.Write(file.Length);
+
+        if (file.Length is 0)
+            return;
+            
         bw.Write((uint)file.ChunkIds.LongCount());
 
         foreach (var chunkId in file.ChunkIds)

@@ -24,17 +24,46 @@ public abstract class BaseArgs
     public bool IsDirectory => !string.IsNullOrEmpty(Directory);
 }
 
-[Verb("tune")]
-public class TuneArgs : BaseArgs
+[Verb("train")]
+public class TrainArgs : BaseArgs
 {
-    [Option("min", Required = false, Default = FastCdc.MinimumMin, HelpText = "FastCdc min size to begin with")]
+    public enum TrainModes
+    {
+        FastCdc,
+        CompressionDict
+    }
+
+    [Option("min", Required = false, Default = FastCdc.MinimumMin, HelpText = "Min size to begin with")]
     public uint Min { get; set; }
 
-    [Option("max", Required = false, Default = FastCdc.MaximumMax, HelpText = "FastCdc max size to end with")]
+    [Option("max", Required = false, Default = FastCdc.MaximumMax, HelpText = "Max size to end with")]
     public uint Max { get; set; }
 
-    [Option("concurrency", Required = false, Default = 0, HelpText = "The number of concurrent tasks (0 is Environment.ProcessorCount)")]
-    public int Concurrency { get; set; }
+    [Option("concurrency", Required = false, HelpText = "The number of concurrent tasks (0 is Environment.ProcessorCount)")]
+    public int Concurrency
+    {
+        get => field > 0 ? field : Environment.ProcessorCount;
+        set
+        {
+            field = value < 0
+                ? throw new ArgumentOutOfRangeException("Concurrency cannot be negative")
+                : value;
+        }
+    }
+
+    [Option("fastcdc-min", Required = false, Default = FastCdcFsOptions.DefaultFastCdcMinSize, HelpText = "FastCdc Min (only when mode is compression-dict)")]
+    public uint FastCdcMin { get; set; }
+
+    [Option("fastcdc-avg", Required = false, Default = FastCdcFsOptions.DefaultFastCdcAverageSize, HelpText = "FastCdc Average (only when mode is compression-dict)")]
+    public uint FastCdcAvg { get; set; }
+
+    [Option("fastcdc-max", Required = false, Default = FastCdcFsOptions.DefaultFastCdcMaxSize, HelpText = "FastCdc Max (only when mode is compression-dict)")]
+    public uint FastCdcMax { get; set; }
+
+    [Value(0, Required = true, HelpText = "Train mode: fastcdc parameter or compressiondict")]
+    public TrainModes Mode { get; set; }
+
+    public FastCdcFsOptions GetCompressionDictOptions() => FastCdcFsOptions.Default.WithChunkSizes(FastCdcMin, FastCdcAvg, FastCdcMax);
 
     internal void Validate()
     {
@@ -47,8 +76,10 @@ public class TuneArgs : BaseArgs
         if (Max > FastCdc.MaximumMax)
             throw new Exception($"Max < {FastCdc.MaximumMax}");
 
-        if (Concurrency < 0)
-            throw new Exception("Concurrency cannot be negative");
+        if (Mode is TrainModes.CompressionDict)
+        {
+            GetCompressionDictOptions();
+        }
     }
 }
 
@@ -70,6 +101,9 @@ public class BuildArgs : BaseArgs
     [Option("compression-level", Required = false, Default = FastCdcFsOptions.DefaultCompressionLevel, HelpText = "Zstd compression level")]
     public int CompressionLevel { get; set; }
 
+    [Option("dict-size", Required = false, HelpText = "Zstd compression dict size (if 0, 100 * average of sample data is used")]
+    public uint CompressionDictSize { get; set; }
+
     [Option("fastcdc-min", Required = false, Default = FastCdcFsOptions.DefaultFastCdcMinSize, HelpText = "Minimum chunk size for FastCDC algorithm")]
     public uint FastCdcMin { get; set; }
 
@@ -78,12 +112,6 @@ public class BuildArgs : BaseArgs
 
     [Option("fastcdc-max", Required = false, Default = FastCdcFsOptions.DefaultFastCdcMaxSize, HelpText = "Maximum chunk size for FastCDC algorithm")]
     public uint FastCdcMax { get; set; }
-
-    [Option("small-file-threshold", Required = false, Default = FastCdcFsOptions.DefaultSmallFileThreshold, HelpText = "Threshold for small file handling")]
-    public uint SmallFileThreshold { get; set; }
-
-    [Option("solid-block-size", Required = false, Default = FastCdcFsOptions.DefaultSolidBlockSize, HelpText = "Size of solid blocks for small files")]
-    public uint SolidBlockSize { get; set; }
 }
 
 [Verb("list")]
